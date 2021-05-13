@@ -9,6 +9,11 @@ import config
 
 log = logging.getLogger(__name__)
 
+
+import board
+import digitalio
+
+
 try:
     if config.max31855 + config.max6675 + config.max31855spi > 1:
         log.error("choose (only) one converter IC")
@@ -17,8 +22,10 @@ try:
         from max31855 import MAX31855, MAX31855Error
         log.info("import MAX31855")
     if config.max31855spi:
-        import Adafruit_GPIO.SPI as SPI
-        from max31855spi import MAX31855SPI, MAX31855SPIError
+        #import Adafruit_GPIO.SPI as SPI
+        from busio import SPI
+        import adafruit_max31855
+        #from max31855spi import MAX31855SPI, MAX31855SPIError
         log.info("import MAX31855SPI")
         spi_reserved_gpio = [7, 8, 9, 10, 11]
         if config.gpio_air in spi_reserved_gpio:
@@ -248,12 +255,13 @@ class TempSensorReal(TempSensor):
 
         if config.max31855spi:
             log.info("init MAX31855-spi")
-            self.thermocouple = MAX31855SPI(spi_dev=SPI.SpiDev(port=0, device=config.spi_sensor_chip_id))
+            
+            self.thermocouple = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(board.D5) )
 
     def run(self):
         while True:
             try:
-                self.temperature = self.thermocouple.get()
+                self.temperature = self.thermocouple.temperature
             except Exception:
                 log.exception("problem reading temp")
             time.sleep(self.time_step)
