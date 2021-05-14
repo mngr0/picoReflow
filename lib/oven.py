@@ -105,7 +105,6 @@ class Oven (threading.Thread):
 
                 log.info("pid: %.3f" % pid)
 
-                self.set_cool(pid <= -1)
                 if(pid > 0):
                     # The temp should be changing with the heat on
                     # Count the number of time_steps encountered with no change and the heat on
@@ -168,16 +167,6 @@ class Oven (threading.Thread):
                else:
                  GPIO.output(config.gpio_heat, GPIO.LOW)
 
-    def set_cool(self, value):
-        if value:
-            self.cool = 1.0
-            if gpio_available:
-                GPIO.output(config.gpio_cool, GPIO.LOW)
-        else:
-            self.cool = 0.0
-            if gpio_available:
-                GPIO.output(config.gpio_cool, GPIO.HIGH)
-
     def set_air(self, value):
         if value:
             self.air = 1.0
@@ -200,12 +189,6 @@ class Oven (threading.Thread):
         }
         return state
 
-    def get_door_state(self):
-        if gpio_available:
-            return "OPEN" if GPIO.input(config.gpio_door) else "CLOSED"
-        else:
-            return "UNKNOWN"
-
 
 class TempSensor(threading.Thread):
     def __init__(self, time_step):
@@ -222,12 +205,14 @@ class TempSensorReal(TempSensor):
         if config.max31855spi:
             log.info("init MAX31855-spi")
             
-            self.thermocouple = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(board.D5) )
+            self.thermocouple = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(config.gpio_sensor_cs1) )
+            self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(config.gpio_sensor_cs2) )
 
-    def run(self):
+def run(self):
         while True:
             try:
                 self.temperature = self.thermocouple.temperature
+                self.temperature2 = self.thermocouple2.temperature
             except Exception:
                 log.exception("problem reading temp")
             time.sleep(self.time_step)
