@@ -86,7 +86,7 @@ def handle_control():
             elif msgdict.get("cmd") == "STOP":
                 log.info("Stop command received")
                 oven.abort_run()
-        except WebSocketError:
+        except WebSocketException:
             break
     log.info("websocket (control) closed")
 
@@ -106,7 +106,8 @@ def handle_storage():
                 msgdict = json.loads(message)
             except:
                 msgdict = {}
-
+            print("debug: ",message)
+            print("debug: ",msgdict)
             if message == "GET":
                 log.info("GET command recived")
                 wsock.send(get_profiles())
@@ -131,7 +132,7 @@ def handle_storage():
 
                     wsock.send(json.dumps(msgdict))
                     wsock.send(get_profiles())
-        except WebSocketError:
+        except WebSocketException:
             break
     log.info("websocket (storage) closed")
 
