@@ -15,12 +15,6 @@ import digitalio
 
 
 try:
-    if config.max31855 + config.max6675 + config.max31855spi > 1:
-        log.error("choose (only) one converter IC")
-        exit()
-    if config.max31855:
-        from max31855 import MAX31855, MAX31855Error
-        log.info("import MAX31855")
     if config.max31855spi:
         #import Adafruit_GPIO.SPI as SPI
         from busio import SPI
@@ -30,15 +24,8 @@ try:
         spi_reserved_gpio = [7, 8, 9, 10, 11]
         if config.gpio_air in spi_reserved_gpio:
             raise Exception("gpio_air pin %s collides with SPI pins %s" % (config.gpio_air, spi_reserved_gpio))
-        if config.gpio_cool in spi_reserved_gpio:
-            raise Exception("gpio_cool pin %s collides with SPI pins %s" % (config.gpio_cool, spi_reserved_gpio))
-        if config.gpio_door in spi_reserved_gpio:
-            raise Exception("gpio_door pin %s collides with SPI pins %s" % (config.gpio_door, spi_reserved_gpio))
         if config.gpio_heat in spi_reserved_gpio:
             raise Exception("gpio_heat pin %s collides with SPI pins %s" % (config.gpio_heat, spi_reserved_gpio))
-    if config.max6675:
-        from max6675 import MAX6675, MAX6675Error
-        log.info("import MAX6675")
     sensor_available = True
 except ImportError:
     log.exception("Could not initialize temperature sensor, using dummy values!")
@@ -49,9 +36,7 @@ try:
     GPIO.setmode(GPIO.BCM)
     GPIO.setwarnings(False)
     GPIO.setup(config.gpio_heat, GPIO.OUT)
-    GPIO.setup(config.gpio_cool, GPIO.OUT)
     GPIO.setup(config.gpio_air, GPIO.OUT)
-    GPIO.setup(config.gpio_door, GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
     gpio_available = True
 except ImportError:
@@ -87,10 +72,8 @@ class Oven (threading.Thread):
         self.runtime = 0
         self.totaltime = 0
         self.target = 0
-        self.door = self.get_door_state()
         self.state = Oven.STATE_IDLE
         self.set_heat(False)
-        self.set_cool(False)
         self.set_air(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
 
@@ -110,15 +93,13 @@ class Oven (threading.Thread):
         last_temp = 0
         pid = 0
         while True:
-            self.door = self.get_door_state()
-
             if self.state == Oven.STATE_RUNNING:
                 if self.simulate:
                     self.runtime += 0.5
                 else:
                     runtime_delta = datetime.datetime.now() - self.start_time
                     self.runtime = runtime_delta.total_seconds()
-                log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, cool %.2f, air %.2f, door %s (%.1fs/%.0f)" % (self.temp_sensor.temperature, self.target, self.heat, self.cool, self.air, self.door, self.runtime, self.totaltime))
+                log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs/%.0f)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime, self.totaltime))
                 self.target = self.profile.get_target_temperature(self.runtime)
                 pid = self.pid.compute(self.target, self.temp_sensor.temperature)
 
@@ -214,10 +195,8 @@ class Oven (threading.Thread):
             'target': self.target,
             'state': self.state,
             'heat': self.heat,
-            'cool': self.cool,
             'air': self.air,
             'totaltime': self.totaltime,
-            'door': self.door
         }
         return state
 
@@ -239,19 +218,6 @@ class TempSensor(threading.Thread):
 class TempSensorReal(TempSensor):
     def __init__(self, time_step):
         TempSensor.__init__(self, time_step)
-        if config.max6675:
-            log.info("init MAX6675")
-            self.thermocouple = MAX6675(config.gpio_sensor_cs,
-                                     config.gpio_sensor_clock,
-                                     config.gpio_sensor_data,
-                                     config.temp_scale)
-
-        if config.max31855:
-            log.info("init MAX31855")
-            self.thermocouple = MAX31855(config.gpio_sensor_cs,
-                                     config.gpio_sensor_clock,
-                                     config.gpio_sensor_data,
-                                     config.temp_scale)
 
         if config.max31855spi:
             log.info("init MAX31855-spi")
