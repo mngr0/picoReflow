@@ -12,13 +12,13 @@ log = logging.getLogger(__name__)
 
 import board
 import digitalio
+import adafruit_max31855
 
 
 try:
     if config.max31855spi:
         #import Adafruit_GPIO.SPI as SPI
-        from busio import SPI
-        import adafruit_max31855
+        #from busio import SPI
         #from max31855spi import MAX31855SPI, MAX31855SPIError
         log.info("import MAX31855SPI")
         spi_reserved_gpio = [7, 8, 9, 10, 11]
@@ -55,14 +55,10 @@ class Oven (threading.Thread):
         self.simulate = simulate
         self.time_step = time_step
         self.reset()
-        if simulate:
-            self.temp_sensor = TempSensorSimulate(self, 0.5, self.time_step)
         if sensor_available:
             self.temp_sensor = TempSensorReal(self.time_step)
         else:
-            self.temp_sensor = TempSensorSimulate(self,
-                                                  self.time_step,
-                                                  self.time_step)
+            raise Exception("Temp Sensor not ready")
         self.temp_sensor.start()
         self.start()
 
@@ -120,12 +116,12 @@ class Oven (threading.Thread):
                         self.reset()
                 else:
                     temperature_count = 0
-                    
+
                 #Capture the last temperature value.  This must be done before set_heat, since there is a sleep in there now.
                 last_temp = self.temp_sensor.temperature
-                
+
                 self.set_heat(pid)
-                
+
                 #if self.profile.is_rising(self.runtime):
                 #    self.set_cool(False)
                 #    self.set_heat(self.temp_sensor.temperature < self.target)
@@ -141,7 +137,6 @@ class Oven (threading.Thread):
                 if self.runtime >= self.totaltime:
                     self.reset()
 
-            
             if pid > 0:
                 time.sleep(self.time_step * (1 - pid))
             else:
@@ -154,11 +149,11 @@ class Oven (threading.Thread):
                if config.heater_invert:
                  GPIO.output(config.gpio_heat, GPIO.LOW)
                  time.sleep(self.time_step * value)
-                 GPIO.output(config.gpio_heat, GPIO.HIGH)   
+                 GPIO.output(config.gpio_heat, GPIO.HIGH)
                else:
                  GPIO.output(config.gpio_heat, GPIO.HIGH)
                  time.sleep(self.time_step * value)
-                 GPIO.output(config.gpio_heat, GPIO.LOW)   
+                 GPIO.output(config.gpio_heat, GPIO.LOW)
         else:
             self.heat = 0.0
             if gpio_available:
@@ -204,69 +199,34 @@ class TempSensorReal(TempSensor):
 
         if config.max31855spi:
             log.info("init MAX31855-spi")
-            
-            self.thermocouple = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(config.gpio_sensor_cs1) )
-            self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), digitalio.DigitalInOut(config.gpio_sensor_cs2) )
+            cs1=digitalio.DigitalInOut(config.gpio_sensor_cs1)
+            cs1.direction = digitalio.Direction.OUTPUT
+            cs1.value = True
+            cs2=digitalio.DigitalInOut(config.gpio_sensor_cs2)
+            cs2.direction = digitalio.Direction.OUTPUT
+            cs2.value = True
+            self.thermocouple1 = adafruit_max31855.MAX31855(board.SPI(), cs1 )
+            self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), cs2 )
 
-def run(self):
+    def run(self):
         while True:
             try:
-                self.temperature = self.thermocouple.temperature
-                self.temperature2 = self.thermocouple2.temperature
+                t1 = 0
+                t2 = 0
+                try:
+                    t2 = self.thermocouple2.temperature
+                    #log.info("T2: %s"%str(t2))
+                except Exception:
+                    t2 = 0
+                try:
+                    t1 = self.thermocouple1.temperature
+                    #log.info("T1: %s"%str(t1))
+                except Exception:
+                    t1 = t2
+                self.temperature = (t2 + t1) / 2
             except Exception:
                 log.exception("problem reading temp")
             time.sleep(self.time_step)
-
-
-class TempSensorSimulate(TempSensor):
-    def __init__(self, oven, time_step, sleep_time):
-        TempSensor.__init__(self, time_step)
-        self.oven = oven
-        self.sleep_time = sleep_time
-
-    def run(self):
-        t_env      = config.sim_t_env
-        c_heat     = config.sim_c_heat
-        c_oven     = config.sim_c_oven
-        p_heat     = config.sim_p_heat
-        R_o_nocool = config.sim_R_o_nocool
-        R_o_cool   = config.sim_R_o_cool
-        R_ho_noair = config.sim_R_ho_noair
-        R_ho_air   = config.sim_R_ho_air
-
-        t = t_env  # deg C  temp in oven
-        t_h = t    # deg C temp of heat element
-        while True:
-            #heating energy
-            Q_h = p_heat * self.time_step * self.oven.heat
-
-            #temperature change of heat element by heating
-            t_h += Q_h / c_heat
-
-            if self.oven.air:
-                R_ho = R_ho_air
-            else:
-                R_ho = R_ho_noair
-
-            #energy flux heat_el -> oven
-            p_ho = (t_h - t) / R_ho
-
-            #temperature change of oven and heat el
-            t   += p_ho * self.time_step / c_oven
-            t_h -= p_ho * self.time_step / c_heat
-
-            #energy flux oven -> env
-            if self.oven.cool:
-                p_env = (t - t_env) / R_o_cool
-            else:
-                p_env = (t - t_env) / R_o_nocool
-
-            #temperature change of oven by cooling to env
-            t -= p_env * self.time_step / c_oven
-            log.debug("energy sim: -> %dW heater: %.0f -> %dW oven: %.0f -> %dW env" % (int(p_heat * self.oven.heat), t_h, int(p_ho), t, int(p_env)))
-            self.temperature = t
-
-            time.sleep(self.sleep_time)
 
 
 class Profile():
