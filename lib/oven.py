@@ -32,14 +32,12 @@ try:
     heat=digitalio.DigitalInOut(config.gpio_heat)
     heat.direction = digitalio.Direction.OUTPUT
     heat.value = True
-    #GPIO.setup(config.gpio_heat, GPIO.OUT)
     air=digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
     air.value = True
-    #GPIO.setup(config.gpio_air, GPIO.OUT)
 
 except ImportError:
-    msg = "Could not initialize GPIOs, oven operation will only be simulated!"
+    msg = "Could not initialize GPIOs!"
     log.warning(msg)
     exit(1)
 
@@ -80,11 +78,17 @@ class Oven (threading.Thread):
     def abort_run(self):
         self.reset()
 
+    def status_LED(self):
+        pass
+        #look at status and 
+
     def run(self):
         temperature_count = 0
         last_temp = 0
         pid = 0
         while True:
+            #if button pressed start run
+            #if long press, stop run
             if self.state == Oven.STATE_RUNNING:
                 runtime_delta = datetime.datetime.now() - self.start_time
                 self.runtime = runtime_delta.total_seconds()
@@ -104,7 +108,7 @@ class Oven (threading.Thread):
                     # If the heat is on and nothing is changing, reset
                     # The direction or amount of change does not matter
                     # This prevents runaway in the event of a sensor read failure
-                    if temperature_count > 20:
+                    if temperature_count > 200:
                         log.info("Error reading sensor, oven temp not responding to heat.")
                         self.reset()
                 else:
@@ -141,23 +145,22 @@ class Oven (threading.Thread):
             if config.heater_invert:
                 self.heat_pin.value = False
                 #GPIO.output(config.gpio_heat, GPIO.LOW)
-                #time.sleep(self.time_step * value)
+                time.sleep(self.time_step * value)
                 #GPIO.output(config.gpio_heat, GPIO.HIGH)
-                log.info("diocane basso")
+                self.heat_pin.value = True
             else:
-                log.info("diocane alto")
                 self.heat_pin.value = True
                 #GPIO.output(config.gpio_heat, GPIO.HIGH)
-                #time.sleep(self.time_step * value)
-                 #GPIO.output(config.gpio_heat, GPIO.LOW)
+                time.sleep(self.time_step * value)
+                #GPIO.output(config.gpio_heat, GPIO.LOW)
+                self.heat_pin.value = False
+
         else:
             self.heat = 0.0
             if config.heater_invert:
                 self.heat_pin.value = True
                 #GPIO.output(config.gpio_heat, GPIO.HIGH)
-                log.info("diocane alto")
             else:
-                log.info("diocane basso")
                 #GPIO.output(config.gpio_heat, GPIO.LOW)
                 self.heat_pin.value = False
 
@@ -194,16 +197,15 @@ class TempSensorReal(TempSensor):
     def __init__(self, time_step):
         TempSensor.__init__(self, time_step)
 
-        if config.max31855spi:
-            log.info("init MAX31855-spi")
-            cs1=digitalio.DigitalInOut(config.gpio_sensor_cs1)
-            cs1.direction = digitalio.Direction.OUTPUT
-            cs1.value = True
-            cs2=digitalio.DigitalInOut(config.gpio_sensor_cs2)
-            cs2.direction = digitalio.Direction.OUTPUT
-            cs2.value = True
-            self.thermocouple1 = adafruit_max31855.MAX31855(board.SPI(), cs1 )
-            self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), cs2 )
+        log.info("init MAX31855-spi")
+        cs1=digitalio.DigitalInOut(config.gpio_sensor_cs1)
+        cs1.direction = digitalio.Direction.OUTPUT
+        cs1.value = True
+        cs2=digitalio.DigitalInOut(config.gpio_sensor_cs2)
+        cs2.direction = digitalio.Direction.OUTPUT
+        cs2.value = True
+        self.thermocouple1 = adafruit_max31855.MAX31855(board.SPI(), cs1 )
+        self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), cs2 )
 
     def run(self):
         while True:
@@ -214,13 +216,22 @@ class TempSensorReal(TempSensor):
                     t2 = self.thermocouple2.temperature
                     #log.info("T2: %s"%str(t2))
                 except Exception:
-                    t2 = 0
+                    t2 = None
+                    log.exception("T2 READING ERROR")
                 try:
                     t1 = self.thermocouple1.temperature
                     #log.info("T1: %s"%str(t1))
                 except Exception:
-                    t1 = t2
-                self.temperature = (t2 + t1) / 2
+                    t1 = None
+                    log.exception("T1 READING ERROR")
+                if t1 is None and t2 is None:
+                    self.temperature = 0
+                elif t1 is None and t2 is not None:
+                    self.temperature = t2
+                elif t1 is not None and t2 is None:
+                    self.temperature = t1
+                else:
+                    self.temperature = (t2 + t1) / 2
             except Exception:
                 log.exception("problem reading temp")
             time.sleep(self.time_step)
