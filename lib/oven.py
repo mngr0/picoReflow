@@ -29,9 +29,10 @@ except ImportError:
     sensor_available = False
 
 try:
-    heat=digitalio.DigitalInOut(config.gpio_heat)
-    heat.direction = digitalio.Direction.OUTPUT
-    heat.value = False
+    # heat=digitalio.DigitalInOut(config.gpio_heat)
+    # heat.direction = digitalio.Direction.OUTPUT
+    # heat.value = False
+    heat = pwmio.PWMOut(board.D5, frequency=50, duty_cycle=0)
     air=digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
     air.value = False
@@ -182,20 +183,24 @@ class Oven (threading.Thread):
             self.heat = 1.0
 
             if config.heater_invert:
-                self.heat_pin.value = False
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = True
+                self.heat_pin.duty_cycle = 65535*(1-value)
+                # self.heat_pin.value = False
+                # time.sleep(self.time_step * value)
+                # self.heat_pin.value = True
             else:
-                self.heat_pin.value = True
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = False
+                self.heat_pin.duty_cycle = 65535*value
+                # self.heat_pin.value = True
+                # time.sleep(self.time_step * value)
+                # self.heat_pin.value = False
 
         else:
             self.heat = 0.0
             if config.heater_invert:
-                self.heat_pin.value = True
+                self.heat_pin.duty_cycle = 65535
+                #self.heat_pin.value = True
             else:
                 self.heat_pin.value = False
+                self.heat_pin.duty_cycle = 0
 
     def set_air(self, value):
         #todo: add PID, which start full, then slows down
