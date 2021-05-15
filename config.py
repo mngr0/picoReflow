@@ -30,7 +30,7 @@ gpio_LED_R = board.D6
 gpio_LED_G = board.D26
 gpio_LED_B = board.D5
 
-
+gpio_BUTTON = board.D16
 
 gpio_heat = board.D12  # Switches zero-cross solid-state-relay
 gpio_air  = board.D13   # Switches 0-phase det. solid-state-relay

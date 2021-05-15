@@ -13,7 +13,7 @@ log = logging.getLogger(__name__)
 import board
 import digitalio
 import adafruit_max31855
-
+import pwmio
 
 try:
     if config.max31855spi:
@@ -31,10 +31,10 @@ except ImportError:
 try:
     heat=digitalio.DigitalInOut(config.gpio_heat)
     heat.direction = digitalio.Direction.OUTPUT
-    heat.value = True
+    heat.value = False
     air=digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
-    air.value = True
+    air.value = False
     ledR=digitalio.DigitalInOut(config.gpio_LED_R)
     ledR.direction = digitalio.Direction.OUTPUT
     ledR.value = True
@@ -44,6 +44,9 @@ try:
     ledB=digitalio.DigitalInOut(config.gpio_LED_B)
     ledB.direction = digitalio.Direction.OUTPUT
     ledB.value = True
+
+    button=digitalio.DigitalInOut(config.gpio_BUTTON)
+    ledB.direction = digitalio.Direction.INPUT
 
 except ImportError:
     msg = "Could not initialize GPIOs!"
@@ -62,6 +65,8 @@ class Oven (threading.Thread):
         self.ledR_pin=ledR
         self.ledG_pin=ledG
         self.ledB_pin=ledB
+        self.button_pin = button
+        self.profile = None
 
         self.time_step = time_step
         self.reset()
@@ -80,10 +85,13 @@ class Oven (threading.Thread):
         self.set_air(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
 
-    def run_profile(self, profile):
-        log.info("Running profile %s" % profile.name)
+    def set_profile(self, profile):
+        log.info("configuring profile %s" % profile.name)
         self.profile = profile
-        self.totaltime = profile.get_duration()
+
+    def start_run(self):
+        log.info("Running profile %s" % self.profile.name)
+        self.totaltime = self.profile.get_duration()
         self.state = Oven.STATE_RUNNING
         self.start_time = datetime.datetime.now()
         log.info("Starting")
@@ -108,8 +116,18 @@ class Oven (threading.Thread):
         temperature_count = 0
         last_temp = 0
         pid = 0
+        button_state=self.button_pin.value
+        button_start_press = datetime.datetime.now()
         while True:
             #if button pressed start run
+            new_button_state = self.button_pin.value
+            if self.button_pin.value == 1:
+                if button_state == 0:
+                    button_start_press = datetime.datetime.now()
+                if ( datetime.datetime.now() - button_start_press ).seconds > 1:
+                    pass
+                    #start
+            button_state = new_button_state
             #if long press, stop run
             if self.state == Oven.STATE_RUNNING:
                 runtime_delta = datetime.datetime.now() - self.start_time
