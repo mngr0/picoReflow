@@ -98,6 +98,11 @@ class Oven (threading.Thread):
 
                 log.info("pid: %.3f" % pid)
 
+
+
+
+
+
                 if(pid > 0):
                     # The temp should be changing with the heat on
                     # Count the number of time_steps encountered with no change and the heat on
@@ -119,21 +124,17 @@ class Oven (threading.Thread):
 
                 self.set_heat(pid)
 
-                #if self.profile.is_rising(self.runtime):
-                #    self.set_cool(False)
-                #    self.set_heat(self.temp_sensor.temperature < self.target)
-                #else:
-                #    self.set_heat(False)
-                #    self.set_cool(self.temp_sensor.temperature > self.target)
 
-                if self.temp_sensor.temperature > 200:
-                    self.set_air(False)
-                elif self.temp_sensor.temperature < 180:
+                if self.temp_sensor.temperature > self.target+10:
                     self.set_air(True)
+                else:
+                    self.set_air(False)
 
                 if self.runtime >= self.totaltime:
                     self.reset()
-
+            else:
+                self.set_air(False)
+                self.set_heat(0)
             if pid > 0:
                 time.sleep(self.time_step * (1 - pid))
             else:
@@ -165,6 +166,7 @@ class Oven (threading.Thread):
                 self.heat_pin.value = False
 
     def set_air(self, value):
+        #todo: add PID, which start full, then slows down
         if value:
             self.air = 1.0
             self.air_pin.value = True

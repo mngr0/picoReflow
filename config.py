@@ -35,7 +35,7 @@ gpio_LED_B = board.D5
 gpio_heat = board.D12  # Switches zero-cross solid-state-relay
 gpio_air  = board.D13   # Switches 0-phase det. solid-state-relay
 
-heater_invert = 1 # switches the polarity of the heater control
+heater_invert = 0 # switches the polarity of the heater control
 
 ### Inputs
 
