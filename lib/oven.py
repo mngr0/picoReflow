@@ -35,6 +35,15 @@ try:
     air=digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
     air.value = True
+    ledR=digitalio.DigitalInOut(config.gpio_LED_R)
+    ledR.direction = digitalio.Direction.OUTPUT
+    ledR.value = True
+    ledG=digitalio.DigitalInOut(config.gpio_LED_G)
+    ledG.direction = digitalio.Direction.OUTPUT
+    ledG.value = True
+    ledB=digitalio.DigitalInOut(config.gpio_LED_B)
+    ledB.direction = digitalio.Direction.OUTPUT
+    ledB.value = True
 
 except ImportError:
     msg = "Could not initialize GPIOs!"
@@ -50,6 +59,10 @@ class Oven (threading.Thread):
         self.daemon = True
         self.heat_pin=heat
         self.air_pin=air
+        self.ledR_pin=ledR
+        self.ledG_pin=ledG
+        self.ledB_pin=ledB
+
         self.time_step = time_step
         self.reset()
         self.temp_sensor = TempSensorReal(self.time_step)
@@ -79,8 +92,17 @@ class Oven (threading.Thread):
         self.reset()
 
     def status_LED(self):
-        pass
-        #look at status and 
+        if self.air:
+            self.ledB_pin.value = True
+        else:
+            self.ledB_pin.value = False
+
+        if self.heat:
+            self.ledR_pin.value = True
+        else:
+            self.ledR_pin.value = False
+
+
 
     def run(self):
         temperature_count = 0
@@ -97,11 +119,6 @@ class Oven (threading.Thread):
                 pid = self.pid.compute(self.target, self.temp_sensor.temperature)
 
                 log.info("pid: %.3f" % pid)
-
-
-
-
-
 
                 if(pid > 0):
                     # The temp should be changing with the heat on
@@ -141,28 +158,25 @@ class Oven (threading.Thread):
                 time.sleep(self.time_step)
 
     def set_heat(self, value):
+	#todo use pwmio
         if value > 0:
+
             self.heat = 1.0
+
             if config.heater_invert:
                 self.heat_pin.value = False
-                #GPIO.output(config.gpio_heat, GPIO.LOW)
                 time.sleep(self.time_step * value)
-                #GPIO.output(config.gpio_heat, GPIO.HIGH)
                 self.heat_pin.value = True
             else:
                 self.heat_pin.value = True
-                #GPIO.output(config.gpio_heat, GPIO.HIGH)
                 time.sleep(self.time_step * value)
-                #GPIO.output(config.gpio_heat, GPIO.LOW)
                 self.heat_pin.value = False
 
         else:
             self.heat = 0.0
             if config.heater_invert:
                 self.heat_pin.value = True
-                #GPIO.output(config.gpio_heat, GPIO.HIGH)
             else:
-                #GPIO.output(config.gpio_heat, GPIO.LOW)
                 self.heat_pin.value = False
 
     def set_air(self, value):
@@ -216,13 +230,11 @@ class TempSensorReal(TempSensor):
                 t2 = 0
                 try:
                     t2 = self.thermocouple2.temperature
-                    #log.info("T2: %s"%str(t2))
                 except Exception:
                     t2 = None
                     log.exception("T2 READING ERROR")
                 try:
                     t1 = self.thermocouple1.temperature
-                    #log.info("T1: %s"%str(t1))
                 except Exception:
                     t1 = None
                     log.exception("T1 READING ERROR")
