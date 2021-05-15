@@ -17,9 +17,6 @@ import adafruit_max31855
 
 try:
     if config.max31855spi:
-        #import Adafruit_GPIO.SPI as SPI
-        #from busio import SPI
-        #from max31855spi import MAX31855SPI, MAX31855SPIError
         log.info("import MAX31855SPI")
         spi_reserved_gpio = [7, 8, 9, 10, 11]
         if config.gpio_air in spi_reserved_gpio:
@@ -32,18 +29,19 @@ except ImportError:
     sensor_available = False
 
 try:
-    import RPi.GPIO as GPIO
-    GPIO.setmode(GPIO.BCM)
-    GPIO.setwarnings(False)
-    GPIO.setup(config.gpio_heat, GPIO.OUT)
-    GPIO.setup(config.gpio_air, GPIO.OUT)
+    heat=digitalio.DigitalInOut(config.gpio_heat)
+    heat.direction = digitalio.Direction.OUTPUT
+    heat.value = True
+    #GPIO.setup(config.gpio_heat, GPIO.OUT)
+    air=digitalio.DigitalInOut(config.gpio_air)
+    air.direction = digitalio.Direction.OUTPUT
+    air.value = True
+    #GPIO.setup(config.gpio_air, GPIO.OUT)
 
-    gpio_available = True
 except ImportError:
     msg = "Could not initialize GPIOs, oven operation will only be simulated!"
     log.warning(msg)
-    gpio_available = False
-
+    exit(1)
 
 class Oven (threading.Thread):
     STATE_IDLE = "IDLE"
@@ -52,13 +50,11 @@ class Oven (threading.Thread):
     def __init__(self, simulate=False, time_step=config.sensor_time_wait):
         threading.Thread.__init__(self)
         self.daemon = True
-        self.simulate = simulate
+        self.heat_pin=heat
+        self.air_pin=air
         self.time_step = time_step
         self.reset()
-        if sensor_available:
-            self.temp_sensor = TempSensorReal(self.time_step)
-        else:
-            raise Exception("Temp Sensor not ready")
+        self.temp_sensor = TempSensorReal(self.time_step)
         self.temp_sensor.start()
         self.start()
 
@@ -90,11 +86,8 @@ class Oven (threading.Thread):
         pid = 0
         while True:
             if self.state == Oven.STATE_RUNNING:
-                if self.simulate:
-                    self.runtime += 0.5
-                else:
-                    runtime_delta = datetime.datetime.now() - self.start_time
-                    self.runtime = runtime_delta.total_seconds()
+                runtime_delta = datetime.datetime.now() - self.start_time
+                self.runtime = runtime_delta.total_seconds()
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs/%.0f)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime, self.totaltime))
                 self.target = self.profile.get_target_temperature(self.runtime)
                 pid = self.pid.compute(self.target, self.temp_sensor.temperature)
@@ -110,7 +103,7 @@ class Oven (threading.Thread):
                         temperature_count = 0
                     # If the heat is on and nothing is changing, reset
                     # The direction or amount of change does not matter
-                    # This prevents runaway in the event of a sensor read failure                   
+                    # This prevents runaway in the event of a sensor read failure
                     if temperature_count > 20:
                         log.info("Error reading sensor, oven temp not responding to heat.")
                         self.reset()
@@ -145,32 +138,36 @@ class Oven (threading.Thread):
     def set_heat(self, value):
         if value > 0:
             self.heat = 1.0
-            if gpio_available:
-               if config.heater_invert:
-                 GPIO.output(config.gpio_heat, GPIO.LOW)
-                 time.sleep(self.time_step * value)
-                 GPIO.output(config.gpio_heat, GPIO.HIGH)
-               else:
-                 GPIO.output(config.gpio_heat, GPIO.HIGH)
-                 time.sleep(self.time_step * value)
-                 GPIO.output(config.gpio_heat, GPIO.LOW)
+            if config.heater_invert:
+                self.heat_pin.value = False
+                #GPIO.output(config.gpio_heat, GPIO.LOW)
+                #time.sleep(self.time_step * value)
+                #GPIO.output(config.gpio_heat, GPIO.HIGH)
+                log.info("diocane basso")
+            else:
+                log.info("diocane alto")
+                self.heat_pin.value = True
+                #GPIO.output(config.gpio_heat, GPIO.HIGH)
+                #time.sleep(self.time_step * value)
+                 #GPIO.output(config.gpio_heat, GPIO.LOW)
         else:
             self.heat = 0.0
-            if gpio_available:
-               if config.heater_invert:
-                 GPIO.output(config.gpio_heat, GPIO.HIGH)
-               else:
-                 GPIO.output(config.gpio_heat, GPIO.LOW)
+            if config.heater_invert:
+                self.heat_pin.value = True
+                #GPIO.output(config.gpio_heat, GPIO.HIGH)
+                log.info("diocane alto")
+            else:
+                log.info("diocane basso")
+                #GPIO.output(config.gpio_heat, GPIO.LOW)
+                self.heat_pin.value = False
 
     def set_air(self, value):
         if value:
             self.air = 1.0
-            if gpio_available:
-                GPIO.output(config.gpio_air, GPIO.LOW)
+            self.air_pin.value = True
         else:
             self.air = 0.0
-            if gpio_available:
-                GPIO.output(config.gpio_air, GPIO.HIGH)
+            self.air_pin.value = False
 
     def get_state(self):
         state = {
