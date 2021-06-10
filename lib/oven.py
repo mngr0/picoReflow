@@ -182,7 +182,10 @@ class Oven (threading.Thread):
         self.oven_controller = OvenController()
 
         self.time_step = time_step
-        self.reset()
+        self.set_heat(False)
+        self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
+
+        #self.reset()
         self.temp_sensor = TempSensorReal(self.time_step)
         self.temp_sensor.start()
         self.start()
@@ -238,7 +241,7 @@ class Oven (threading.Thread):
                     #start
             button_state = new_button_state
             #if long press, stop run
-            if self.state == Oven.STATE_RUNNING:
+            if not self.oven_controller.is_idle:
                 runtime_delta = datetime.datetime.now() - self.start_time
                 self.runtime = runtime_delta.total_seconds()
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime ))
