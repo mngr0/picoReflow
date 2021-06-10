@@ -181,6 +181,7 @@ class Oven (threading.Thread):
         self.ledB_pin=ledB
         self.button_pin = button
         self.runtime = 0
+        self.target=0
         self.oven_controller = OvenController()
 
         self.time_step = time_step
@@ -333,7 +334,7 @@ class Oven (threading.Thread):
         state = {
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
-            'target': self.target,
+            'target': self.target[1],
             'state': self.state,
             'heat': self.heat,
             'air': self.air,
