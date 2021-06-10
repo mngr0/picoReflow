@@ -278,7 +278,20 @@ class Profile():
     def __init__(self, json_data):
         obj = json.loads(json_data)
         self.name = obj["name"]
+
         self.data = sorted(obj["data"])
+
+        self.base_temp = 80
+        self.heat_temp = 180
+        self.heat_ramp = 1.5
+        self.peak_temp = 230
+        self.limit_temp = 260
+        self.peak_ramp = 2
+        
+        self.cool_temp = 50
+        self.cool_ramp = -2
+
+
 
     def get_duration(self):
         return max([t for (t, x) in self.data])
