@@ -74,7 +74,7 @@ except ImportError:
 class OvenController(StateMachine):
 
 
-    idle = State('Idle',initial=True)
+    idle = State('idle',initial=True)
     reaching_base_temp = State('reaching_base_temp')
     reaching_heat_temp = State('reaching_heat_temp')
     reaching_peak_temp = State('reaching_peak_temp')
@@ -334,7 +334,7 @@ class Oven (threading.Thread):
         state = {
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
-            'target': self.target[1],
+            'target': self.target,
             'state': self.state,
             'heat': self.heat,
             'air': self.air,
