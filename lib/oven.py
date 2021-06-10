@@ -91,7 +91,7 @@ class OvenController(StateMachine):
 
     def on_start(self):
         print("start!!")
-        self.start_time = datetime.datetime.now()
+        self.start_time = datetime.datetime.strptime()
 
 
     def on_reached_base_temp(self):
@@ -118,7 +118,7 @@ class OvenController(StateMachine):
             self.reached_peak_temp()
 
     def __init__(self):
-        self.time_stamp = datetime.datetime.now()
+        self.time_stamp = datetime.datetime.strptime()
         self.last_target = (None,None)
         self.profile = None
         self.start_time = None
@@ -146,12 +146,12 @@ class OvenController(StateMachine):
         elif self.is_reaching_peak_temp:
             target_temp = self.conf["peak_temp"]
             if current_temp >= self.conf["peak_temp"]:
-                self.time_stamp =  datetime.datetime.now()
+                self.time_stamp =  datetime.datetime.strptime()
                 self.reached_peak_temp()
             
         elif self.is_doing_peak:
             target_temp = self.conf["peak_temp"]
-            if  datetime.datetime.now() - self.time_stamp > self.conf["peak_time"]:
+            if  datetime.datetime.strptime() - self.time_stamp > self.conf["peak_time"]:
                 self.peak_done()
         elif self.is_cooling:
             target_temp = 0
@@ -160,7 +160,7 @@ class OvenController(StateMachine):
 
         if current_temp > self.profile.conf["limit_temp"]:
             target_temp = self.profile.conf["limit_temp"]
-        self.last_target = (datetime.datetime.now() ,  target_temp)
+        self.last_target = (datetime.datetime.strptime() ,  target_temp)
         return target_temp
     
     def get_pid(self,target_temp, current_temp):
@@ -169,7 +169,7 @@ class OvenController(StateMachine):
 
 class Oven (threading.Thread):
 
-    def __init__(self, simulate=False, time_step=config.sensor_time_wait):
+    def __init__(self, time_step=config.sensor_time_wait):
         threading.Thread.__init__(self)
         self.daemon = True
         self.heat_pin=heat
@@ -205,7 +205,7 @@ class Oven (threading.Thread):
         log.info("Running profile %s" % self.oven_controller.profile.name)
 
 
-        self.start_time = datetime.datetime.now()
+        self.start_time = datetime.datetime.strptime()
         log.info("Starting")
 
     def abort_run(self):
@@ -229,20 +229,20 @@ class Oven (threading.Thread):
         last_temp = 0
         pid = 0
         button_state=self.button_pin.value
-        button_start_press = datetime.datetime.now()
+        button_start_press = datetime.datetime.strptime()
         while True:
             #if button pressed start run
             new_button_state = self.button_pin.value
             if self.button_pin.value == 1:
                 if button_state == 0:
-                    button_start_press = datetime.datetime.now()
-                if ( datetime.datetime.now() - button_start_press ).seconds > 1:
+                    button_start_press = datetime.datetime.strptime()
+                if ( datetime.datetime.strptime() - button_start_press ).seconds > 1:
                     pass
                     #start
             button_state = new_button_state
             #if long press, stop run
             if not self.oven_controller.is_idle:
-                runtime_delta = datetime.datetime.now() - self.start_time
+                runtime_delta = datetime.datetime.strptime() - self.start_time
                 self.runtime = runtime_delta.total_seconds()
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime ))
                 
@@ -439,12 +439,12 @@ class PID():
         self.ki = ki
         self.kp = kp
         self.kd = kd
-        self.lastNow = datetime.datetime.now()
+        self.lastNow = datetime.datetime.strptime()
         self.iterm = 0
         self.lastErr = 0
 
     def compute(self, setpoint, ispoint):
-        now = datetime.datetime.now()
+        now = datetime.datetime.strptime()
         timeDelta = (now - self.lastNow).total_seconds()
 
         error = float(setpoint - ispoint)
