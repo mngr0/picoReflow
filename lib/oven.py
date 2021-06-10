@@ -14,6 +14,7 @@ import board
 import digitalio
 import adafruit_max31855
 import pwmio
+from statemachine import StateMachine, State
 
 try:
     if config.max31855spi:
@@ -54,9 +55,119 @@ except ImportError:
     log.warning(msg)
     exit(1)
 
+
+        # self.conf = {
+        #     "base_temp" : 80,
+        #     "heat_temp" : 180,
+        #     "heat_ramp" : 1.5, #C/s
+        #     "time_above_melting_point" : 90, #s
+        #     "melting_point" : 217,
+        #     "peak_temp" : 230,
+        #     "limit_temp" : 260,
+        #     "peak_ramp" : 2,  #C/s
+        #     "peak_time" : 30, #s
+        #     "cool_temp" : 50,
+        #     "cool_ramp" : -2 #C/s 
+        # }
+
+class OvenController(StateMachine):
+
+
+    idle = State('Idle',initial=True)
+    reaching_base_temp = State('reaching_base_temp')
+    reaching_heat_temp = State('reaching_heat_temp')
+    reaching_peak_temp = State('reaching_peak_temp')
+    doing_peak = State('doing_peak')
+    cooling = State('cooling')
+
+    start = idle.to(reaching_base_temp)
+    reached_base_temp = reaching_base_temp.to(reaching_heat_temp)
+    reached_heat_temp = reaching_heat_temp.to(reaching_peak_temp)
+    reached_peak_temp = reaching_peak_temp.to(doing_peak)
+    peak_done = doing_peak.to(cooling)
+    cooling_done = cooling.to(idle)
+
+    reset = reaching_base_temp.to(idle) | reached_heat_temp = reaching_heat_temp.to(idle) | reached_peak_temp = reaching_peak_temp.to(idle) |  peak_done = doing_peak.to(idle)
+
+    def on_start(self):
+        print("start!!")
+        self.start_time = datetime.datetime.now()
+
+
+    def on_reached_base_temp(self):
+        print("reached base temp!")
+
+    def on_reached_heat_temp(self):
+        print("reached heat temp!")
+
+    def on_reached_peak_temp(self):
+        print("reached peak temp!")
+
+    def on_peak_done(self):
+        print("peak done!")
+
+    def on_cooling_done(self):
+        print("cooling done!")
+
+    def on_reset():
+        print("reset!")
+
+
+    def check(self):
+        if 0:
+            self.reached_peak_temp()
+
+    def __init__(self):
+        self.time_stamp = datetime.datetime.now()
+        self.last_target = (None,None)
+        self.profile = None
+        self.start_time = None
+
+    def set_profile(self,profile):
+        self.profile = profile
+
+    def start_run(self):
+        self.start()
+
+    def get_target_temperature(self, current_temp):
+        target_temp = 0
+        if self.is_idle: 
+            target_temp = min(self.conf["base_temp"],current_temp)
+            
+        elif self.is_reaching_base_temp:
+            target_temp = self.conf["base_temp"]
+            if current_temp >= self.conf["base_temp"]:
+                self.reached_base_temp()
+
+        elif self.is_reaching_heat_temp:
+            target_temp = self.conf["heat_temp"]
+            if current_temp >= self.conf["heat_temp"]:
+                self.reached_heat_temp()
+        elif self.is_reaching_peak_temp:
+            target_temp = self.conf["peak_temp"]
+            if current_temp >= self.conf["peak_temp"]:
+                self.time_stamp =  datetime.datetime.now()
+                self.reached_peak_temp()
+            
+        elif self.is_doing_peak:
+            target_temp = self.conf["peak_temp"]
+            if  datetime.datetime.now() - self.time_stamp > self.conf["peak_time"]:
+                self.peak_done()
+        elif self.is_cooling:
+            target_temp = 0
+
+
+
+        if current_temp > self.profile.conf["limit_temp"]:
+            target_temp = self.profile.conf["limit_temp"]
+        self.last_target = (datetime.datetime.now() ,  target_temp)
+        return target_temp
+    
+    def get_pid(self,target_temp, current_temp):
+        return 0
+
+
 class Oven (threading.Thread):
-    STATE_IDLE = "IDLE"
-    STATE_RUNNING = "RUNNING"
 
     def __init__(self, simulate=False, time_step=config.sensor_time_wait):
         threading.Thread.__init__(self)
@@ -67,7 +178,8 @@ class Oven (threading.Thread):
         self.ledG_pin=ledG
         self.ledB_pin=ledB
         self.button_pin = button
-        self.profile = None
+
+        self.oven_controller = OvenController()
 
         self.time_step = time_step
         self.reset()
@@ -76,24 +188,20 @@ class Oven (threading.Thread):
         self.start()
 
     def reset(self):
-        self.profile = None
-        self.start_time = 0
-        self.runtime = 0
-        self.totaltime = 0
-        self.target = 0
-        self.state = Oven.STATE_IDLE
+
+        self.oven_controller.reset()
         self.set_heat(False)
-        self.set_air(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
 
     def set_profile(self, profile):
         log.info("configuring profile %s" % profile.name)
-        self.profile = profile
+        self.oven_controller.set_profile(profile)
+
 
     def start_run(self):
-        log.info("Running profile %s" % self.profile.name)
-        self.totaltime = self.profile.get_duration()
-        self.state = Oven.STATE_RUNNING
+        log.info("Running profile %s" % self.oven_controller.profile.name)
+
+
         self.start_time = datetime.datetime.now()
         log.info("Starting")
 
@@ -133,9 +241,14 @@ class Oven (threading.Thread):
             if self.state == Oven.STATE_RUNNING:
                 runtime_delta = datetime.datetime.now() - self.start_time
                 self.runtime = runtime_delta.total_seconds()
-                log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs/%.0f)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime, self.totaltime))
-                self.target = self.profile.get_target_temperature(self.runtime)
-                pid = self.pid.compute(self.target, self.temp_sensor.temperature)
+                log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime ))
+                
+                
+                
+                
+                self.target = self.oven_controller.get_target_temperature(self.temp_sensor.temperature)
+                pid = self.oven_controller.get_pid(self.target,self.temp_sensor.temperature)
+                #pid = self.pid.compute(self.target, self.temp_sensor.temperature)
 
                 log.info("pid: %.3f" % pid)
 
@@ -165,9 +278,6 @@ class Oven (threading.Thread):
                     self.set_air(True)
                 else:
                     self.set_air(False)
-
-                if self.runtime >= self.totaltime:
-                    self.reset()
             else:
                 self.set_air(False)
                 self.set_heat(0)
@@ -175,6 +285,9 @@ class Oven (threading.Thread):
                 time.sleep(self.time_step * (1 - pid))
             else:
                 time.sleep(self.time_step)
+
+
+
 
     def set_heat(self, value):
 	#todo use pwmio
@@ -219,7 +332,7 @@ class Oven (threading.Thread):
             'state': self.state,
             'heat': self.heat,
             'air': self.air,
-            'totaltime': self.totaltime,
+            'totaltime': 900,
         }
         return state
 
@@ -278,55 +391,44 @@ class Profile():
     def __init__(self, json_data):
         obj = json.loads(json_data)
         self.name = obj["name"]
-
-        self.data = sorted(obj["data"])
-
-        self.base_temp = 80
-        self.heat_temp = 180
-        self.heat_ramp = 1.5
-        self.peak_temp = 230
-        self.limit_temp = 260
-        self.peak_ramp = 2
         
-        self.cool_temp = 50
-        self.cool_ramp = -2
+
+        self.conf = {
+            "base_temp" : 80,
+            "heat_temp" : 180,
+            "heat_ramp" : 1.5, #C/s
+            "time_above_melting_point" : 90, #s
+            "melting_point" : 217,
+            "peak_temp" : 230,
+            "limit_temp" : 260,
+            "peak_ramp" : 2,  #C/s
+            "peak_time" : 30, #s
+            "cool_temp" : 50,
+            "cool_ramp" : -2 #C/s 
+        }
 
 
+class Report():
+    def __init__(self, json_data):
+        obj = json.loads(json_data)
+        self.name = obj["name"]
+        
 
-    def get_duration(self):
-        return max([t for (t, x) in self.data])
+        self.conf = {
+            "total_time" : 80,
+            "heat_temp" : 180,
+            "heat_ramp" : 1.5, #C/s
+            "time_above_melting_point" : 90, #s
+            "melting_point" : 217,
+            "peak_temp" : 230,
+            "limit_temp" : 260,
+            "peak_ramp" : 2,  #C/s
+            "peak_time" : 30, #s
+            "cool_temp" : 50,
+            "cool_ramp" : -2 #C/s 
+        }
 
-    def get_surrounding_points(self, time):
-        if time > self.get_duration():
-            return (None, None)
 
-        prev_point = None
-        next_point = None
-
-        for i in range(len(self.data)):
-            if time < self.data[i][0]:
-                prev_point = self.data[i-1]
-                next_point = self.data[i]
-                break
-
-        return (prev_point, next_point)
-
-    def is_rising(self, time):
-        (prev_point, next_point) = self.get_surrounding_points(time)
-        if prev_point and next_point:
-            return prev_point[1] < next_point[1]
-        else:
-            return False
-
-    def get_target_temperature(self, time):
-        if time > self.get_duration():
-            return 0
-
-        (prev_point, next_point) = self.get_surrounding_points(time)
-
-        incl = float(next_point[1] - prev_point[1]) / float(next_point[0] - prev_point[0])
-        temp = prev_point[1] + (time - prev_point[0]) * incl
-        return temp
 
 
 class PID():
