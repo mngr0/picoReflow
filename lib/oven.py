@@ -1,7 +1,8 @@
 import threading
 import time
 import random
-import datetime
+import _strptime
+from datetime import datetime
 import logging
 import json
 
@@ -118,7 +119,8 @@ class OvenController(StateMachine):
             self.reached_peak_temp()
 
     def __init__(self):
-        self.time_stamp = datetime.datetime.strptime()
+        #self.time_stamp = datetime.datetime.strptime()
+        #datetime.strptime(date, format)
         self.last_target = (None,None)
         self.profile = None
         self.start_time = None
