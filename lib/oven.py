@@ -1,7 +1,7 @@
 import threading
 import time
-import random
-import _strptime
+#import random
+#import _strptime
 from datetime import datetime
 import logging
 import json
@@ -180,7 +180,7 @@ class Oven (threading.Thread):
         self.ledG_pin=ledG
         self.ledB_pin=ledB
         self.button_pin = button
-
+        self.runtime = 0
         self.oven_controller = OvenController()
 
         self.time_step = time_step
