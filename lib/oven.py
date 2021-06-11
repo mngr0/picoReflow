@@ -274,8 +274,11 @@ class Oven (threading.Thread):
                 else:
                     self.set_air(False)
             else:
-                if self.temp_sensor.temperature > self.oven_controller.profile.conf["cool_temp"]:
-                    self.set_air(False)
+                if self.temp_sensor.temperature > self.oven_controller.profile is not None:
+                    if self.temp_sensor.temperature > self.oven_controller.profile.conf["cool_temp"]:
+                        self.set_air(False)
+                    else:
+                        self.set_air(False)
                 else:
                     self.set_air(False)
                 self.set_heat(0)
