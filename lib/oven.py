@@ -138,27 +138,29 @@ class OvenController:
         if self.oven.is_idle: 
             target_temp = min(self.conf["base_temp"],current_temp)
             
-        elif self.is_reaching_base_temp:
+        elif self.oven.is_reaching_base_temp:
             target_temp = self.conf["base_temp"]
             if current_temp >= self.conf["base_temp"]:
-                self.reached_base_temp()
+                self.oven.reached_base_temp()
 
-        elif self.is_reaching_heat_temp:
+        elif self.oven.is_reaching_heat_temp:
             target_temp = self.conf["heat_temp"]
             if current_temp >= self.conf["heat_temp"]:
-                self.reached_heat_temp()
-        elif self.is_reaching_peak_temp:
+                self.oven.reached_heat_temp()
+        elif self.oven.is_reaching_peak_temp:
             target_temp = self.conf["peak_temp"]
             if current_temp >= self.conf["peak_temp"]:
                 self.time_stamp =  datetime.now()
-                self.reached_peak_temp()
+                self.oven.reached_peak_temp()
             
-        elif self.is_doing_peak:
+        elif self.oven.is_doing_peak:
             target_temp = self.conf["peak_temp"]
             if  datetime.now() - self.time_stamp > self.conf["peak_time"]:
                 self.peak_done()
-        elif self.is_cooling:
+        elif self.oven.is_cooling:
             target_temp = 0
+            if current_temp <= self.conf["base_temp"]:
+                self.oven.cooling_done()
 
 
 
@@ -185,7 +187,6 @@ class Oven (threading.Thread):
         self.runtime = 0
         self.target=0
         self.oven_controller = OvenController()
-        self.oven_controller.configure__init__()
         self.time_step = time_step
         self.set_heat(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
@@ -197,7 +198,7 @@ class Oven (threading.Thread):
 
     def reset(self):
 
-        self.oven_controller.reset()
+        self.oven_controller.oven.reset()
         self.set_heat(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
 
@@ -219,7 +220,7 @@ class Oven (threading.Thread):
     def status_LED(self):
         if self.air:
             self.ledB_pin.value = True
-        else:
+        else: is:open 
             self.ledB_pin.value = False
 
         if self.heat:
@@ -246,7 +247,7 @@ class Oven (threading.Thread):
                     #start
             button_state = new_button_state
             #if long press, stop run
-            if not self.oven_controller.is_idle:
+            if not self.oven_controller.oven.is_idle:
                 runtime_delta = datetime.now() - self.start_time
                 self.runtime = runtime_delta.total_seconds()
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (self.temp_sensor.temperature, self.target, self.heat, self.air, self.runtime ))
