@@ -326,7 +326,7 @@ class Oven (threading.Thread):
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
             'target': self.target,
-            'state': self.oven_controller.oven.current_state.value,
+            'state': self.oven_controller.oven.state,
             'heat': self.heat,
             'air': self.air,
             'totaltime': 900,
