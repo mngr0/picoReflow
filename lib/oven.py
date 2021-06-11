@@ -131,7 +131,7 @@ class OvenController:
         self.profile = profile
 
     def start_run(self):
-        self.start()
+        self.oven.start()
 
     def get_target_temperature(self, current_temp):
         target_temp = 0
@@ -209,8 +209,7 @@ class Oven (threading.Thread):
 
     def start_run(self):
         log.info("Running profile %s" % self.oven_controller.profile.name)
-
-
+        self.oven_controller.start_run()
         self.start_time = datetime.now()
         log.info("Starting")
 
@@ -256,8 +255,8 @@ class Oven (threading.Thread):
                 
                 
                 self.target = self.oven_controller.get_target_temperature(self.temp_sensor.temperature)
-                pid = self.oven_controller.get_pid(self.target,self.temp_sensor.temperature)
-                #pid = self.pid.compute(self.target, self.temp_sensor.temperature)
+                #pid = self.oven_controller.get_pid(self.target,self.temp_sensor.temperature)
+                pid = self.pid.compute(self.target, self.temp_sensor.temperature)
 
                 log.info("pid: %.3f" % pid)
 
