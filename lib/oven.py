@@ -363,7 +363,7 @@ class TempSensorReal(TempSensor):
                 self.t2 = 0
                 try:
                     self.t2 = self.thermocouple2.temperature
-                except Exception:
+                except RuntimeError:
                     self.t2 = None
                     log.exception("T2 READING ERROR")
                 try:
