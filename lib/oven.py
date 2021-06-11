@@ -304,16 +304,18 @@ class Oven (threading.Thread):
             self.heat = 1.0
 
             if config.heater_invert:
-                self.heat_pin.duty_cycle = 65535*(1-value)
-                # self.heat_pin.value = False
-                # time.sleep(self.time_step * value)
-                # self.heat_pin.value = True
+                #self.heat_pin.duty_cycle = 65535*(1-value)
+                
+                self.heat_pin.value = False
+                time.sleep(self.time_step * value)
+                self.heat_pin.value = True
             else:
-                self.heat_pin.duty_cycle = 65535*value
-                # self.heat_pin.value = True
-                # time.sleep(self.time_step * value)
-                # self.heat_pin.value = False
-            print("PWM TO ",self.heat_pin.duty_cycle)
+                #self.heat_pin.duty_cycle = 65535*value
+                
+                self.heat_pin.value = True
+                time.sleep(self.time_step * value)
+                self.heat_pin.value = False
+            #print("PWM TO ",self.heat_pin.duty_cycle)
 
         else:
             self.heat = 0.0
