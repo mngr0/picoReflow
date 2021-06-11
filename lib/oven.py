@@ -57,7 +57,7 @@ except ImportError:
     exit(1)
 
 
-        # self.conf = {
+        # self.profile.conf = {
         #     "base_temp" : 80,
         #     "heat_temp" : 180,
         #     "heat_ramp" : 1.5, #C/s
@@ -135,30 +135,30 @@ class OvenController:
         print("get_target", self.oven)
         target_temp = 0
         if self.oven.is_idle: 
-            target_temp = min(self.conf["base_temp"],current_temp)
+            target_temp = min(self.profile.conf["base_temp"],current_temp)
             
         elif self.oven.is_reaching_base_temp:
-            target_temp = self.conf["base_temp"]
-            if current_temp >= self.conf["base_temp"]:
+            target_temp = self.profile.conf["base_temp"]
+            if current_temp >= self.profile.conf["base_temp"]:
                 self.oven.reached_base_temp()
 
         elif self.oven.is_reaching_heat_temp:
-            target_temp = self.conf["heat_temp"]
-            if current_temp >= self.conf["heat_temp"]:
+            target_temp = self.profile.conf["heat_temp"]
+            if current_temp >= self.profile.conf["heat_temp"]:
                 self.oven.reached_heat_temp()
         elif self.oven.is_reaching_peak_temp:
-            target_temp = self.conf["peak_temp"]
-            if current_temp >= self.conf["peak_temp"]:
+            target_temp = self.profile.conf["peak_temp"]
+            if current_temp >= self.profile.conf["peak_temp"]:
                 self.time_stamp =  datetime.now()
                 self.oven.reached_peak_temp()
             
         elif self.oven.is_doing_peak:
-            target_temp = self.conf["peak_temp"]
-            if  datetime.now() - self.time_stamp > self.conf["peak_time"]:
+            target_temp = self.profile.conf["peak_temp"]
+            if  datetime.now() - self.time_stamp > self.profile.conf["peak_time"]:
                 self.peak_done()
         elif self.oven.is_cooling:
             target_temp = 0
-            if current_temp <= self.conf["base_temp"]:
+            if current_temp <= self.profile.conf["base_temp"]:
                 self.oven.cooling_done()
 
 
@@ -422,7 +422,7 @@ class Report():
         self.name = obj["name"]
         
 
-        self.conf = {
+        self.profile.conf = {
             "total_time" : 80,
             "heat_temp" : 180,
             "heat_ramp" : 1.5, #C/s
