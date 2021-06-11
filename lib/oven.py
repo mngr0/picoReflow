@@ -35,6 +35,8 @@ try:
     heat.direction = digitalio.Direction.OUTPUT
     heat.value = False
     #heat = pwmio.PWMOut(board.D5, frequency=50, duty_cycle=0)
+
+
     air=digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
     air.value = False
@@ -139,7 +141,7 @@ class OvenController:
             
         elif self.oven.is_doing_peak:
             target_temp = self.profile.conf["peak_temp"]
-            if  datetime.now() - self.time_stamp > self.profile.conf["peak_time"]:
+            if  (datetime.now() - self.time_stamp ).total_seconds() > self.profile.conf["peak_time"]:
                 self.peak_done()
         elif self.oven.is_cooling:
             target_temp = 0
@@ -291,14 +293,14 @@ class Oven (threading.Thread):
                 #self.heat_pin.duty_cycle = 65535*(1-value)
                 
                 self.heat_pin.value = False
-                #time.sleep(self.time_step * value)
-                #self.heat_pin.value = True
+                time.sleep(self.time_step * value)
+                self.heat_pin.value = True
             else:
                 #self.heat_pin.duty_cycle = 65535*value
                 
                 self.heat_pin.value = True
-                #time.sleep(self.time_step * value)
-                #self.heat_pin.value = False
+                time.sleep(self.time_step * value)
+                self.heat_pin.value = False
             #print("PWM TO ",self.heat_pin.duty_cycle)
 
         else:
@@ -353,30 +355,32 @@ class TempSensorReal(TempSensor):
         cs2.value = True
         self.thermocouple1 = adafruit_max31855.MAX31855(board.SPI(), cs1 )
         self.thermocouple2 = adafruit_max31855.MAX31855(board.SPI(), cs2 )
+        self.t1 = None
+        self.t2 = None
 
     def run(self):
         while True:
             try:
-                t1 = 0
-                t2 = 0
+                self.t1 = 0
+                self.t2 = 0
                 try:
-                    t2 = self.thermocouple2.temperature
+                    self.t2 = self.thermocouple2.temperature
                 except Exception:
-                    t2 = None
+                    self.t2 = None
                     log.exception("T2 READING ERROR")
                 try:
-                    t1 = self.thermocouple1.temperature
+                    self.t1 = self.thermocouple1.temperature
                 except Exception:
-                    t1 = None
+                    self.t1 = None
                     log.exception("T1 READING ERROR")
-                if t1 is None and t2 is None:
-                    self.temperature = 0
-                elif t1 is None and t2 is not None:
-                    self.temperature = t2
-                elif t1 is not None and t2 is None:
-                    self.temperature = t1
+                if self.t1 is None and self.t2 is None:
+                    self.temperature = self.temperature
+                elif self.t1 is None and self.t2 is not None:
+                    self.temperature = self.t2
+                elif self.t1 is not None and self.t2 is None:
+                    self.temperature = self.t1
                 else:
-                    self.temperature = (t2 + t1) / 2
+                    self.temperature = (self.t2 + self.t1) / 2
             except Exception:
                 log.exception("problem reading temp")
             time.sleep(self.time_step)
@@ -386,9 +390,7 @@ class Profile():
     def __init__(self, json_data):
         obj = json.loads(json_data)
         self.name = obj["name"]
-        
-
-        self.conf = {
+        self.conf1 = {
             "base_temp" : 80,
             "heat_temp" : 180,
             "heat_ramp" : 1.5, #C/s
@@ -402,27 +404,28 @@ class Profile():
             "cool_ramp" : -2 #C/s 
         }
 
-
-class Report():
-    def __init__(self, json_data):
-        obj = json.loads(json_data)
-        self.name = obj["name"]
-        
-
-        self.profile.conf = {
-            "total_time" : 80,
-            "heat_temp" : 180,
+        self.conf2 = {
+            "base_temp" : 30,
+            "heat_temp" : 50,
             "heat_ramp" : 1.5, #C/s
             "time_above_melting_point" : 90, #s
             "melting_point" : 217,
-            "peak_temp" : 230,
-            "limit_temp" : 260,
+            "peak_temp" : 100,
+            "limit_temp" : 150,
             "peak_ramp" : 2,  #C/s
             "peak_time" : 30, #s
             "cool_temp" : 50,
             "cool_ramp" : -2 #C/s 
         }
 
+        self.conf = self.conf2
+
+
+class Report():
+    def __init__(self, json_data):
+        obj = json.loads(json_data)
+        self.name = obj["name"]
+        
 
 
 
