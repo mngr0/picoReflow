@@ -280,7 +280,7 @@ class Oven (threading.Thread):
                 last_temp = self.temp_sensor.temperature
 
                 self.set_heat(pid)
-
+                time.sleep(1)
 
                 if self.temp_sensor.temperature > self.target+10:
                     self.set_air(True)
