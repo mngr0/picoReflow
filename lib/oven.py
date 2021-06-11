@@ -220,7 +220,7 @@ class Oven (threading.Thread):
     def status_LED(self):
         if self.air:
             self.ledB_pin.value = True
-        else: is:open 
+        else: 
             self.ledB_pin.value = False
 
         if self.heat:
