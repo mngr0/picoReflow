@@ -108,7 +108,7 @@ class OvenMachine(StateMachine):
     def on_cooling_done(self):
         print("cooling done!")
 
-    def on_reset():
+    def on_reset(self):
         print("reset!")
 
 class OvenController:
