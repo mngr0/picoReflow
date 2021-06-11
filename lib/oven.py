@@ -230,7 +230,7 @@ class Oven (threading.Thread):
             if self.button_pin.value == 1:
                 if button_state == 0:
                     button_start_press = datetime.now()
-                if (datetime.now() - button_start_press).total_seconds > 1:
+                if (datetime.now() - button_start_press).total_seconds() > 1:
                     pass
                     # start
             button_state = new_button_state
