@@ -142,7 +142,7 @@ class OvenController:
         elif self.oven.is_doing_peak:
             target_temp = self.profile.conf["peak_temp"]
             if  (datetime.now() - self.time_stamp ).total_seconds() > self.profile.conf["peak_time"]:
-                self.peak_done()
+                self.oven.peak_done()
         elif self.oven.is_cooling:
             target_temp = 0
             if current_temp <= self.profile.conf["base_temp"]:
