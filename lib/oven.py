@@ -92,8 +92,6 @@ class OvenMachine(StateMachine):
 
     def on_start(self):
         print("start!!")
-        self.start_time = datetime.now()
-
 
     def on_reached_base_temp(self):
         print("reached base temp!")
@@ -134,6 +132,7 @@ class OvenController:
         self.oven.start()
 
     def get_target_temperature(self, current_temp):
+        print("get_target", self.oven)
         target_temp = 0
         if self.oven.is_idle: 
             target_temp = min(self.conf["base_temp"],current_temp)
@@ -167,6 +166,7 @@ class OvenController:
         if current_temp > self.profile.conf["limit_temp"]:
             target_temp = self.profile.conf["limit_temp"]
         self.last_target = (datetime.now() ,  target_temp)
+        print("target=",target_temp)
         return target_temp
     
     def get_pid(self,target_temp, current_temp):
