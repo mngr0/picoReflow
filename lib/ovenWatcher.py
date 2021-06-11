@@ -12,7 +12,6 @@ class OvenWatcher(threading.Thread):
         threading.Thread.__init__(self)
         self.daemon = True
         self.log_skip_counter = 0
-
         self.oven = oven
         self.start()
 

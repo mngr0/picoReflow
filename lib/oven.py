@@ -56,21 +56,6 @@ except ImportError:
     log.warning(msg)
     exit(1)
 
-
-        # self.profile.conf = {
-        #     "base_temp" : 80,
-        #     "heat_temp" : 180,
-        #     "heat_ramp" : 1.5, #C/s
-        #     "time_above_melting_point" : 90, #s
-        #     "melting_point" : 217,
-        #     "peak_temp" : 230,
-        #     "limit_temp" : 260,
-        #     "peak_ramp" : 2,  #C/s
-        #     "peak_time" : 30, #s
-        #     "cool_temp" : 50,
-        #     "cool_ramp" : -2 #C/s 
-        # }
-
 class OvenMachine(StateMachine):
 
 
@@ -276,7 +261,6 @@ class Oven (threading.Thread):
                 # else:
                 #     temperature_count = 0
 
-                #Capture the last temperature value.  This must be done before set_heat, since there is a sleep in there now.
                 last_temp = self.temp_sensor.temperature
 
                 self.set_heat(pid)
@@ -307,14 +291,14 @@ class Oven (threading.Thread):
                 #self.heat_pin.duty_cycle = 65535*(1-value)
                 
                 self.heat_pin.value = False
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = True
+                #time.sleep(self.time_step * value)
+                #self.heat_pin.value = True
             else:
                 #self.heat_pin.duty_cycle = 65535*value
                 
                 self.heat_pin.value = True
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = False
+                #time.sleep(self.time_step * value)
+                #self.heat_pin.value = False
             #print("PWM TO ",self.heat_pin.duty_cycle)
 
         else:
