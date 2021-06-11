@@ -71,10 +71,10 @@ except ImportError:
         #     "cool_ramp" : -2 #C/s 
         # }
 
-class OvenController(StateMachine):
+class OvenMachine(StateMachine):
 
 
-    idle = State('idle',initial=True)
+    idle = State('idle', initial=True)
     reaching_base_temp = State('reaching_base_temp')
     reaching_heat_temp = State('reaching_heat_temp')
     reaching_peak_temp = State('reaching_peak_temp')
@@ -113,18 +113,20 @@ class OvenController(StateMachine):
     def on_reset():
         print("reset!")
 
+class OvenController:
 
     def check(self):
         if 0:
             self.reached_peak_temp()
 
     def __init__(self):
-        #self.time_stamp = datetime.now()
+        self.time_stamp = datetime.now()
         #datetime.strptime(date, format)
         self.last_target = (None,None)
         self.profile = None
         self.start_time = None
-
+        self.oven=OvenMachine()
+    
     def set_profile(self,profile):
         self.profile = profile
 
@@ -133,7 +135,7 @@ class OvenController(StateMachine):
 
     def get_target_temperature(self, current_temp):
         target_temp = 0
-        if self.is_idle: 
+        if self.oven.is_idle: 
             target_temp = min(self.conf["base_temp"],current_temp)
             
         elif self.is_reaching_base_temp:
@@ -183,7 +185,7 @@ class Oven (threading.Thread):
         self.runtime = 0
         self.target=0
         self.oven_controller = OvenController()
-
+        self.oven_controller.configure__init__()
         self.time_step = time_step
         self.set_heat(False)
         self.pid = PID(ki=config.pid_ki, kd=config.pid_kd, kp=config.pid_kp)
