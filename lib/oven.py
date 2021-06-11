@@ -142,7 +142,6 @@ class OvenController:
                               self.time_stamp).total_seconds() * self.profile.conf["peak_ramp"]
             target_temp = max(current_temp, commanded_temp)
             target_temp = min(target_temp, commanded_temp+5)
-            target_temp = self.profile.conf["peak_temp"]
             if current_temp >= self.profile.conf["peak_temp"]:
                 self.time_stamp = datetime.now()
                 self.oven.reached_peak_temp()
@@ -289,26 +288,22 @@ class Oven (threading.Thread):
 
             self.heating = 1.0
             #self.heat_pin.duty_cycle = 65535*( (1-config.heater_invert) value)
-            if config.heater_invert:
-                #self.heat_pin.duty_cycle = 65535*(1-value)
-                self.heat_pin.value = False
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = True
-            else:
-                #self.heat_pin.duty_cycle = 65535*value
-                self.heat_pin.value = True
-                time.sleep(self.time_step * value)
-                self.heat_pin.value = False
+
+
+
+            #self.heat_pin.duty_cycle = 65535*value
+            self.heat_pin.value = True
+            time.sleep(self.time_step * value)
+            self.heat_pin.value = False
             #print("PWM TO ",self.heat_pin.duty_cycle)
 
         else:
             self.heating = 0.0
-            if config.heater_invert:
-                self.heat_pin.duty_cycle = 65535
-                #self.heat_pin.value = True
-            else:
-                self.heat_pin.value = False
-                self.heat_pin.duty_cycle = 0
+
+            self.heat_pin.duty_cycle = 65535
+            self.heat_pin.value = False
+            #self.heat_pin.value = True
+           
 
     def set_air(self, value):
         # todo: add PID, which start full, then slows down
@@ -327,7 +322,7 @@ class Oven (threading.Thread):
             'state': self.oven_controller.oven.current_state.value,
             'heat': self.heating,
             'air': self.air,
-            'totaltime': 900,
+            'totaltime': 900
         }
         return state
 
