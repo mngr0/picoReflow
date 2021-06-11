@@ -277,7 +277,8 @@ class Oven (threading.Thread):
                 if self.temp_sensor.temperature > self.oven_controller.profile is not None:
                     if self.temp_sensor.temperature > self.oven_controller.profile.conf["cool_temp"]:
                         self.set_air(False)
-                    else:
+                    else: oven_state = self.oven.get_state()
+
                         self.set_air(False)
                 else:
                     self.set_air(False)
@@ -324,7 +325,7 @@ class Oven (threading.Thread):
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
             'target': self.target,
-            'state': self.oven_controller.oven.state,
+            'state': self.oven_controller.oven.current_state.value,
             'heat': self.heating,
             'air': self.air,
             'totaltime': 900,
