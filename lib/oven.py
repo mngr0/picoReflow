@@ -274,8 +274,9 @@ class Oven (threading.Thread):
             self.heating = 1.0
             # self.heat_pin.duty_cycle = 65535*( (1-config.heater_invert) value)
 
-            self.heat_pin.duty_cycle = 65535*(1-value)
-            
+            #self.heat_pin.duty_cycle = 65535*(1-value)
+            self.heat_pin.duty_cycle = 65535*(value)
+
             #self.heat_pin.value = True
             #time.sleep(self.time_step * value)
             #self.heat_pin.value = False
