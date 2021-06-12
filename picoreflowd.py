@@ -164,7 +164,7 @@ def get_profiles():
     profiles = []
     for filename in profile_files:
         with open(os.path.join(profile_path, filename), 'r') as f:
-            profiles.append(json.load(f))
+            profiles.append(json.load(f.read().encode('utf-8').strip()))
     return json.dumps(profiles)
 
 
