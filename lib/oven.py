@@ -279,7 +279,7 @@ class Oven (threading.Thread):
             #self.heat_pin.value = True
             #time.sleep(self.time_step * value)
             #self.heat_pin.value = False
-            #print("PWM TO ",self.heat_pin.duty_cycle)
+            print("PWM TO ",self.heat_pin.duty_cycle)
 
         else:
             self.heating = 0.0
