@@ -306,7 +306,7 @@ class Oven (threading.Thread):
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
             'target': self.target,
-            'state': self.oven_controller.oven.current_state.value,
+            'state': "IDLE" if self.oven_controller.oven.current_state.value != "idle" else "RUNNING" ,
             'heat': self.heating,
             'air': self.air,
             'totaltime': 900
