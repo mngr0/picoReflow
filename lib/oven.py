@@ -284,7 +284,7 @@ class Oven (threading.Thread):
 
         else:
             self.heating = 0.0
-            self.heat_pin.duty_cycle = 65535
+            self.heat_pin.duty_cycle = 0
             #self.heat_pin.duty_cycle = 65535
             #self.heat_pin.value = False
             #self.heat_pin.value = True
