@@ -234,8 +234,8 @@ class Oven (threading.Thread):
                     # start
             button_state = new_button_state
             # if long press, stop run
-            log.info("current temp %.1f deg C " %
-                     (self.temp_sensor.temperature))
+            #log.info("current temp %.1f deg C " %
+            #        (self.temp_sensor.temperature))
             if not self.oven_controller.oven.is_idle:
                 self.runtime = (
                     datetime.now() - self.oven_controller.start_time).total_seconds()
