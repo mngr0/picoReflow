@@ -261,10 +261,10 @@ function leaveEditMode()
     ws_storage.send('GET');
     state="IDLE";
     $('#edit').hide();
-    $('#profile_selector').show();
-    $('#btn_controls').show();
+    $('#profile_selector').hide();
+    $('#btn_controls').hide();
     $('#status').slideDown();
-    $('#profile_table').slideUp();
+    $('#profile_table').slideDown();
     graph.profile.points.show = false;
     graph.profile.draggable = false;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
