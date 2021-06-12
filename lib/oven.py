@@ -303,6 +303,10 @@ class Oven (threading.Thread):
 
     def get_state(self):
         print(self.oven_controller.oven.current_state.value)
+        print("is not",  self.oven_controller.oven.current_state.value is not "idle")
+        print("is",  self.oven_controller.oven.current_state.value is "idle")
+        print("!=",  self.oven_controller.oven.current_state.value != "idle")
+        print("==",  self.oven_controller.oven.current_state.value == "idle")
         state = {
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
