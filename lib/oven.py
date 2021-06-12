@@ -36,7 +36,7 @@ try:
     #heat = digitalio.DigitalInOut(config.gpio_heat)
     #heat.direction = digitalio.Direction.OUTPUT
     #heat.value = False
-    heat = pwmio.PWMOut(board.D5, frequency=50, duty_cycle=0)
+    heat = pwmio.PWMOut(board.D12, frequency=50, duty_cycle=0)
 
     air = digitalio.DigitalInOut(config.gpio_air)
     air.direction = digitalio.Direction.OUTPUT
