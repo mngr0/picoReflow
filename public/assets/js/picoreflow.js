@@ -245,8 +245,8 @@ function enterEditMode()
     state="EDIT"
     $('#status').slideUp();
     $('#edit').show();
-    $('#profile_selector').hide();
-    $('#btn_controls').hide();
+    $('#profile_selector').show();
+    $('#btn_controls').show();
     console.log(profiles);
     $('#form_profile_name').val(profiles[selected_profile].name);
     graph.profile.points.show = true;
@@ -268,28 +268,6 @@ function leaveEditMode()
     graph.profile.points.show = false;
     graph.profile.draggable = false;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
-}
-
-function newPoint()
-{
-    if(graph.profile.data.length > 0)
-    {
-        var pointx = parseInt(graph.profile.data[graph.profile.data.length-1][0])+15;
-    }
-    else
-    {
-        var pointx = 0;
-    }
-    graph.profile.data.push([pointx, Math.floor((Math.random()*230)+25)]);
-    graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
-    updateProfileTable();
-}
-
-function delPoint()
-{
-    graph.profile.data.splice(-1,1)
-    graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
-    updateProfileTable();
 }
 
 function toggleTable()
