@@ -26,7 +26,7 @@ if(window.webkitRequestAnimationFrame) window.requestAnimationFrame = window.web
 graph.profile =
 {
     label: "Profile",
-    data: [[10,10],[20,20]],
+    data: [],
     points: { show: false },
     color: "#75890c",
     draggable: false
@@ -35,7 +35,7 @@ graph.profile =
 graph.live =
 {
     label: "Live",
-    data: [[10,20],[20,30]],
+    data: [],
     points: { show: false },
     color: "#d8d3c5",
     draggable: false
@@ -105,7 +105,15 @@ function updateProfileTable()
         html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><<th></th></tr>';
         html += '<tr> <td> '+ 'ciao' +' </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>'
 
-
+        for(var k in graph.profile){
+            console.log("editing "+k)
+            if(k != "type"){
+                html += '<tr><td><h4>' + k + '</h4></td>';
+                html += '<td><input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile[k],true + '" style="width: 60px" /></td>';
+               // html += '<td><input type="text" class="form-control" id="profiletable-1-'+i+'" value="'+ graph.profile.data[i][1] + '" style="width: 60px" /></td>';
+                html += '</tr>';
+            }
+        } secondObject[k]=firstObject[k];
     // for(var i=0; i<graph.profile.data.length;i++)
     // {
 
@@ -147,19 +155,6 @@ function updateProfileTable()
             updateProfileTable();
 
         });
-}
-
-function timeProfileFormatter(val, down) {
-    var rval = val
-    switch(time_scale_profile){
-        case "m":
-            if (down) {rval = val / 60;} else {rval = val * 60;}
-            break;
-        case "h":
-            if (down) {rval = val / 3600;} else {rval = val * 3600;} 
-            break;
-    }
-    return Math.round(rval);
 }
 
 function formatDPS(val) {
