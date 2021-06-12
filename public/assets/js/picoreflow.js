@@ -245,8 +245,9 @@ function enterEditMode()
     state="EDIT"
     $('#status').slideUp();
     $('#edit').show();
-    $('#profile_selector').show();
-    $('#btn_controls').show();
+    $('#profile_selector').hide();
+    $('#btn_controls').hide();
+    $('#profile_table').slideDown();
     console.log(profiles);
     $('#form_profile_name').val(profiles[selected_profile].name);
     graph.profile.points.show = true;
@@ -261,10 +262,10 @@ function leaveEditMode()
     ws_storage.send('GET');
     state="IDLE";
     $('#edit').hide();
-    $('#profile_selector').hide();
-    $('#btn_controls').hide();
+    $('#profile_selector').show();
+    $('#btn_controls').show();
     $('#status').slideDown();
-    $('#profile_table').slideDown();
+    $('#profile_table').slideUp();
     graph.profile.points.show = false;
     graph.profile.draggable = false;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
