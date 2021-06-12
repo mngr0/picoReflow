@@ -163,6 +163,8 @@ class OvenController:
             if current_temp <= self.profile.conf["cool_temp"]:
                 self.oven.cooling_done()
 
+        target_temp = min(target_temp, self.profile.conf["limit_temp"])
+        target_temp = max(target_temp, 0)
         if current_temp >= self.profile.conf["limit_temp"]:
             target_temp = target_temp-15
         print("target=", target_temp)
