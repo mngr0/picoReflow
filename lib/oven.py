@@ -302,6 +302,7 @@ class Oven (threading.Thread):
             self.air_pin.value = False
 
     def get_state(self):
+        print(self.oven_controller.oven.current_state.value)
         state = {
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
