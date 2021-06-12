@@ -366,7 +366,11 @@ class TempSensorReal(TempSensor):
 class Profile():
     def __init__(self, json_data):
         obj = json.loads(json_data)
+        self.conf={}
         self.name = obj["name"]
+        for key in obj.keys():
+            print("found ",key," : ",obj[key])
+            self.conf[key]=obj[key]
         self.conf1 = {
             "base_temp": 80,
             "heat_temp": 180,
@@ -395,8 +399,6 @@ class Profile():
             "cool_temp": 50,
             "cool_ramp": -2  # C/s
         }
-
-        self.conf = self.conf2
 
 
 class Report():
