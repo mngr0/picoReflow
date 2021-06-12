@@ -264,7 +264,10 @@ class Oven (threading.Thread):
                     else:
                         self.set_air(False)
                 else:
-                    self.set_air(False)
+                    if self.temp_sensor.temperature > 80:
+                        self.set_air(True)
+                    else:
+                        self.set_air(False)
                 self.set_heat(0)
 
     def set_heat(self, value):
