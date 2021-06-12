@@ -105,7 +105,7 @@ function updateProfileTable()
     var color = "";
 
     var html = '<h3>Profile Points</h3><div class="table-responsive" style="scroll: none"><table class="table table-striped">';
-        html += '<tr> Action </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>';
+        html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><<th></th></tr>';
         html += '<tr> <td > '+ 'ciao' +' </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>'
     for(var i=0; i<graph.profile.data.length;i++)
     {
