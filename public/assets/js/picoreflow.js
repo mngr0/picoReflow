@@ -26,7 +26,7 @@ if(window.webkitRequestAnimationFrame) window.requestAnimationFrame = window.web
 graph.profile =
 {
     label: "Profile",
-    data: [],
+    data: [[10,10],[20,20]],
     points: { show: false },
     color: "#75890c",
     draggable: false
@@ -35,7 +35,7 @@ graph.profile =
 graph.live =
 {
     label: "Live",
-    data: [],
+    data: [[10,20],[20,30]],
     points: { show: false },
     color: "#d8d3c5",
     draggable: false
@@ -46,14 +46,11 @@ function updateProfile(id)
 {
     selected_profile = id;
     selected_profile_name = profiles[id].name;
-    var job_seconds = profiles[id].data.length === 0 ? 0 : parseInt(profiles[id].data[profiles[id].data.length-1][0]);
-    var kwh = (3850*job_seconds/3600/1000).toFixed(2);
-    var cost =  (kwh*kwh_rate).toFixed(2);
+    var job_seconds = 900;
     var job_time = new Date(job_seconds * 1000).toISOString().substr(11, 8);
     $('#sel_prof').html(profiles[id].name);
     $('#sel_prof_eta').html(job_time);
     $('#sel_prof_cost').html(kwh + ' kWh ('+ currency_type +': '+ cost +')');
-    graph.profile.data = profiles[id].data;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ] , getOptions());
 }
 
@@ -137,16 +134,16 @@ function updateProfileTable()
             var col = parseInt(fields[1]);
             var row = parseInt(fields[2]);
             
-            if (graph.profile.data.length > 0) {
-            if (col == 0) {
-                graph.profile.data[row][col] = timeProfileFormatter(value,false);   
-            }
-            else {
-                graph.profile.data[row][col] = value;
-            }
+            // if (graph.profile.data.length > 0) {
+            // if (col == 0) {
+            //     graph.profile.data[row][col] = timeProfileFormatter(value,false);   
+            // }
+            // else {
+            //     graph.profile.data[row][col] = value;
+            // }
             
-            graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
-            }
+            //graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
+            //}
             updateProfileTable();
 
         });
@@ -237,7 +234,6 @@ function enterNewMode()
     $('#form_profile_name').attr('placeholder', 'Please enter a name');
     graph.profile.points.show = true;
     graph.profile.draggable = true;
-    graph.profile.data = [];
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
     updateProfileTable();
 }
@@ -287,37 +283,13 @@ function toggleTable()
 
 function saveProfile()
 {
-    name = $('#form_profile_name').val();
+    var name = $('#form_profile_name').val();
     var rawdata = graph.plot.getData()[0].data
-    var data = [];
-    var last = -1;
-
-    for(var i=0; i<rawdata.length;i++)
-    {
-        if(rawdata[i][0] > last)
-        {
-          data.push([rawdata[i][0], rawdata[i][1]]);
-        }
-        else
-        {
-          $.bootstrapGrowl("<span class=\"glyphicon glyphicon-exclamation-sign\"></span> <b>ERROR 88:</b><br/>An oven is not a time-machine", {
-            ele: 'body', // which element to append to
-            type: 'alert', // (null, 'info', 'error', 'success')
-            offset: {from: 'top', amount: 250}, // 'top', or 'bottom'
-            align: 'center', // ('left', 'right', or 'center')
-            width: 385, // (integer, or 'auto')
-            delay: 5000,
-            allow_dismiss: true,
-            stackup_spacing: 10 // spacing between consecutively stacked growls.
-          });
-
-          return false;
-        }
-
-        last = rawdata[i][0];
-    }
 
     var profile = { "type": "profile", "data": data, "name": name }
+    
+    for(var k in rawdata) profile[k]=rawdata[k];
+
     var put = { "cmd": "PUT", "profile": profile }
 
     var put_cmd = JSON.stringify(put);
