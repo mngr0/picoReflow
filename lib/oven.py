@@ -155,7 +155,7 @@ class OvenController:
         elif self.oven.is_cooling:
             commanded_temp = (datetime.now() -
                               self.time_stamp).total_seconds() * self.profile.conf["cool_ramp"]
-            target_temp = min(current_temp-5,commanded_temp)
+            target_temp = min(current_temp-5, commanded_temp)
             if current_temp <= self.profile.conf["cool_temp"]:
                 self.oven.cooling_done()
 
@@ -234,36 +234,21 @@ class Oven (threading.Thread):
                     # start
             button_state = new_button_state
             # if long press, stop run
+            log.info("current temp %.1f deg C " %
+                     (self.temp_sensor.temperature))
             if not self.oven_controller.oven.is_idle:
-                self.runtime = (datetime.now() - self.oven_controller.start_time).total_seconds()
+                self.runtime = (
+                    datetime.now() - self.oven_controller.start_time).total_seconds()
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (
                     self.temp_sensor.temperature, self.target, self.heating, self.air, self.runtime))
 
                 self.target = self.oven_controller.get_target_temperature(
                     self.temp_sensor.temperature)
-                #pid = self.oven_controller.get_pid(self.target,self.temp_sensor.temperature)
+
                 pid = self.pid.compute(
                     self.target, self.temp_sensor.temperature)
 
                 log.info("pid: %.3f" % pid)
-
-                # if(pid > 0):
-                #     # The temp should be changing with the heat on
-                #     # Count the number of time_steps encountered with no change and the heat on
-                #     if last_temp == self.temp_sensor.temperature:
-                #         temperature_count += 1
-                #     else:
-                #         temperature_count = 0
-                #     # If the heat is on and nothing is changing, reset
-                #     # The direction or amount of change does not matter
-                #     # This prevents runaway in the event of a sensor read failure
-                #     if temperature_count > 200:
-                #         log.info("Error reading sensor, oven temp not responding to heat.")
-                #         self.reset()
-                # else:
-                #     temperature_count = 0
-
-                # last_temp = self.temp_sensor.temperature
 
                 self.set_heat(pid)
                 time.sleep(1)
@@ -276,7 +261,7 @@ class Oven (threading.Thread):
                 if self.oven_controller.profile is not None:
                     if self.temp_sensor.temperature > self.oven_controller.profile.conf["cool_temp"]:
                         self.set_air(False)
-                    else: 
+                    else:
                         self.set_air(False)
                 else:
                     self.set_air(False)
@@ -287,9 +272,7 @@ class Oven (threading.Thread):
         if value > 0:
 
             self.heating = 1.0
-            #self.heat_pin.duty_cycle = 65535*( (1-config.heater_invert) value)
-
-
+            # self.heat_pin.duty_cycle = 65535*( (1-config.heater_invert) value)
 
             #self.heat_pin.duty_cycle = 65535*value
             self.heat_pin.value = True
@@ -303,7 +286,6 @@ class Oven (threading.Thread):
             self.heat_pin.duty_cycle = 65535
             self.heat_pin.value = False
             #self.heat_pin.value = True
-           
 
     def set_air(self, value):
         # todo: add PID, which start full, then slows down
@@ -419,8 +401,9 @@ class Report():
     def __init__(self, json_data):
         obj = json.loads(json_data)
         self.name = obj["name"]
-        self.time_over_melting_point =0
-        self.peak_time =0 
+        self.time_over_melting_point = 0
+        self.peak_time = 0
+
 
 class PID():
     def __init__(self, ki=1, kp=1, kd=1):
