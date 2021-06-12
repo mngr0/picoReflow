@@ -119,6 +119,7 @@ class OvenController:
 
         print("get_target", self.oven)
         target_temp = 0
+        air = None
         if self.oven.is_idle:
             target_temp = min(self.profile.conf["base_temp"], current_temp)
 
@@ -148,6 +149,9 @@ class OvenController:
 
         elif self.oven.is_doing_peak:
             target_temp = self.profile.conf["peak_temp"]
+
+            if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["peak_time"]- 10:
+                air = True
             if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["peak_time"]:
                 self.time_stamp = datetime.now()
                 self.oven.peak_done()
@@ -162,7 +166,7 @@ class OvenController:
         if current_temp >= self.profile.conf["limit_temp"]:
             target_temp = target_temp-15
         print("target=", target_temp)
-        return target_temp
+        return (target_temp, air)
 
 
 class Oven (threading.Thread):
@@ -242,7 +246,7 @@ class Oven (threading.Thread):
                 log.info("running at %.1f deg C (Target: %.1f) , heat %.2f, air %.2f (%.1fs)" % (
                     self.temp_sensor.temperature, self.target, self.heating, self.air, self.runtime))
 
-                self.target = self.oven_controller.get_target_temperature(
+                self.target, air_cmd = self.oven_controller.get_target_temperature(
                     self.temp_sensor.temperature)
 
                 pid = self.pid.compute(
@@ -252,11 +256,14 @@ class Oven (threading.Thread):
 
                 self.set_heat(pid)
                 time.sleep(1)
-
-                if self.temp_sensor.temperature > self.target+5:
-                    self.set_air(True)
+                if air_cmd is not None:
+                    self.set_air(air_cmd)
                 else:
-                    self.set_air(False)
+                    if self.temp_sensor.temperature > self.target+5:
+                        self.set_air(True)
+                    else:
+                        self.set_air(False)
+                
             else:
                 if self.oven_controller.profile is not None:
                     if self.temp_sensor.temperature > self.oven_controller.profile.conf["cool_temp"]:
@@ -271,26 +278,14 @@ class Oven (threading.Thread):
                 self.set_heat(0)
 
     def set_heat(self, value):
-        # todo use pwmio
+
         if value > 0:
-
             self.heating = 1.0
-            # self.heat_pin.duty_cycle = 65535*( (1-config.heater_invert) value)
-
-            #self.heat_pin.duty_cycle = 65535*(1-value)
             self.heat_pin.duty_cycle = 65535*(value)
-
-            #self.heat_pin.value = True
-            #time.sleep(self.time_step * value)
-            #self.heat_pin.value = False
-            print("PWM TO ",self.heat_pin.duty_cycle)
-
         else:
             self.heating = 0.0
             self.heat_pin.duty_cycle = 0
-            #self.heat_pin.duty_cycle = 65535
-            #self.heat_pin.value = False
-            #self.heat_pin.value = True
+
 
     def set_air(self, value):
         # todo: add PID, which start full, then slows down
@@ -302,7 +297,6 @@ class Oven (threading.Thread):
             self.air_pin.value = False
 
     def get_state(self):
-        print(self.oven_controller.oven.current_state.value)
         state = {
             'runtime': self.runtime,
             'temperature': self.temp_sensor.temperature,
