@@ -105,8 +105,8 @@ function updateProfileTable()
     var color = "";
 
     var html = '<h3>Profile Points</h3><div class="table-responsive" style="scroll: none"><table class="table table-striped">';
-        html += '<tr><th style="width: 50px">#</th><th>Target Time in ' + time_scale_long+ '</th><th>Target Temperature in °'+temp_scale_display+'</th><th>Slope in &deg;'+temp_scale_display+'/'+time_scale_slope+'</th><th></th></tr>';
-
+        html += '<tr> Action </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>';
+        html += '<tr> <td > '+ graph.profile +' </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>'
     for(var i=0; i<graph.profile.data.length;i++)
     {
 
@@ -207,21 +207,6 @@ function runTask()
     var cmd =
     {
         "cmd": "RUN",
-        "profile": profiles[selected_profile]
-    }
-
-    graph.live.data = [];
-    graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ] , getOptions());
-
-    ws_control.send(JSON.stringify(cmd));
-
-}
-
-function runTaskSimulation()
-{
-    var cmd =
-    {
-        "cmd": "SIMULATE",
         "profile": profiles[selected_profile]
     }
 
