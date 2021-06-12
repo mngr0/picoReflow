@@ -103,13 +103,13 @@ function updateProfileTable()
 
     var html = '<h3>Profile Points</h3><div class="table-responsive" style="scroll: none"> <table class="table table-striped">';
         html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><<th></th></tr>';
-        html += '<tr> <td> '+ 'ciao' +' </th><th> Target Temperature </th><th> Rate </th><<th></th></tr>'
+       
         var i=0
         for(var k in graph.profile){
             console.log("editing "+k)
             if(k != "type"){
                 html += '<tr><td><h4>' + k + '</h4></td>';
-                html += '<td><input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile[k],true + '" style="width: 60px" /></td>';
+                html += '<td> <input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile[k] + '" style="width: 60px"/></td>';
                // html += '<td><input type="text" class="form-control" id="profiletable-1-'+i+'" value="'+ graph.profile.data[i][1] + '" style="width: 60px" /></td>';
                 html += '</tr>';
             }
