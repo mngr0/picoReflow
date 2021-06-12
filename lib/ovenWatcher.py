@@ -18,9 +18,10 @@ class OvenWatcher(threading.Thread):
     def run(self):
         while True:
             oven_state = self.oven.get_state()
-            print("state=",oven_state.get("state"))
             if oven_state.get("state") != "idle":
+                print("logging")
                 if self.log_skip_counter==0:
+                    print("log")
                     self.last_log.append(oven_state)
             else:
                 self.recording = False
