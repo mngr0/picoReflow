@@ -139,8 +139,7 @@ class OvenController:
                 self.oven.reached_heat_temp()
 
         elif self.oven.is_reaching_peak_temp:
-            commanded_temp = (datetime.now() -
-                              self.time_stamp).total_seconds() * self.profile.conf["peak_ramp"] + self.profile.conf["heat_temp"]
+            commanded_temp = (datetime.now() - self.time_stamp).total_seconds() * self.profile.conf["peak_ramp"] + self.profile.conf["heat_temp"]
             target_temp = max(current_temp, commanded_temp)
             target_temp = min(target_temp, commanded_temp+5)
             if current_temp >= self.profile.conf["peak_temp"]:
@@ -157,8 +156,7 @@ class OvenController:
                 self.oven.peak_done()
 
         elif self.oven.is_cooling:
-            commanded_temp = (datetime.now() -
-                              self.time_stamp).total_seconds() * self.profile.conf["cool_ramp"] + target_temp = self.profile.conf["peak_temp"]
+            commanded_temp = (datetime.now() - self.time_stamp).total_seconds() * self.profile.conf["cool_ramp"] + self.profile.conf["peak_temp"]
             target_temp = min(current_temp-5, commanded_temp)
             if current_temp <= self.profile.conf["cool_temp"]:
                 self.oven.cooling_done()
