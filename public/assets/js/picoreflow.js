@@ -120,7 +120,7 @@ function updateProfileTable()
         html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><th></th></tr>';
        
         var i=0
-        for(var k in graph.profile){
+        for(var k in graph.profile.conf){
             console.log("editing "+k)
             if(k != "type"){
                 html += '<tr><td><h4>' + k + '</h4></td>';
