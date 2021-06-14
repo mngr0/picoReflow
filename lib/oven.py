@@ -76,7 +76,7 @@ class OvenMachine(StateMachine):
     cooling_done = cooling.to(idle)
 
     reset = idle.to.itself() | reaching_base_temp.to(idle) | reaching_heat_temp.to(
-        idle) | reaching_peak_temp.to(idle) | doing_peak.to(idle)
+        idle) | reaching_peak_temp.to(idle) | doing_peak.to(idle) | cooling.to(idle)
 
     def on_start(self):
         print("start!!")
@@ -373,15 +373,15 @@ class Profile():
         self.conf = {
             "base_temp": 80,
             "heat_temp": 180,
-            "heat_ramp": 0.5,  # C/s
+            "heat_ramp": 0.8,  # C/s
             "time_above_melting_point": 90,  # s
             "melting_point": 217,
-            "peak_temp": 250,
-            "limit_temp": 260,
-            "peak_ramp": 2,  # C/s
+            "peak_temp": 260,
+            "limit_temp": 265,
+            "peak_ramp": 1.3,  # C/s
             "peak_time": 30,  # s
-            "cool_temp": 50,
-            "cool_ramp": -2,  # C/s
+            "cool_temp": 100,
+            "cool_ramp": -4,  # C/s
             "interval_targets": 4
         }
 
