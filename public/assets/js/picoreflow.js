@@ -117,14 +117,14 @@ function updateProfileTable()
     var color = "";
 
     var html = '<h3>Profile Points</h3> <div class="table-responsive" style="scroll: none"> <table class="table table-striped">';
-        html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><th></th></tr>';
+        html += '<tr><th></th><th> Action</th> <th> Target Temperature </th><th></th></tr>';
        
         var i=0
         for(var k in graph.profile.conf){
             console.log("editing "+k)
             if(k != "type"){
                 html += '<tr><td><h4>' + k + '</h4></td>';
-                html += '<td> <input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile.conf[k] + '" style="width: 60px"/></td>';
+                html += '<td> <td></td><input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile.conf[k] + '" style="width: 60px"/></td>';
                // html += '<td><input type="text" class="form-control" id="profiletable-1-'+i+'" value="'+ graph.profile.data[i][1] + '" style="width: 60px" /></td>';
                 html += '</tr>';
             }
@@ -152,6 +152,8 @@ function updateProfileTable()
     //Link table to graph
     $(".form-control").change(function(e)
         {
+            console.log(e)
+            //graph.profile.conf
             var id = $(this)[0].id; //e.currentTarget.attributes.id
             var value = parseInt($(this)[0].value);
             var fields = id.split("-");
@@ -260,7 +262,7 @@ function enterEditMode()
     console.log(profiles);
     $('#form_profile_name').val(profiles[selected_profile].name);
     graph.profile.points.show = true;
-    graph.profile.draggable = true;
+    graph.profile.draggable = false;
     graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
     updateProfileTable();
 }
