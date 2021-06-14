@@ -26,7 +26,22 @@ if(window.webkitRequestAnimationFrame) window.requestAnimationFrame = window.web
 graph.profile =
 {
     label: "Profile",
-    data: [],
+    target_temps = [],
+    conf= {
+        "base_temp": 80,
+        "heat_temp": 180,
+        "heat_ramp": 0.8,
+        "plateau_time": 40,
+        "time_above_melting_point": 90,
+        "melting_point": 217,
+        "peak_temp": 260,
+        "limit_temp": 265,
+        "peak_ramp": 1.3,
+        "peak_time": 30, 
+        "cool_temp": 100,
+        "cool_ramp": -4,
+        "interval_targets": 4
+    },
     points: { show: false },
     color: "#75890c",
     draggable: false

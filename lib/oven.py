@@ -64,13 +64,15 @@ class OvenMachine(StateMachine):
     idle = State('idle', initial=True)
     reaching_base_temp = State('reaching_base_temp')
     reaching_heat_temp = State('reaching_heat_temp')
+    doing_heat_plateau = State('doing_heat_plateau')
     reaching_peak_temp = State('reaching_peak_temp')
     doing_peak = State('doing_peak')
     cooling = State('cooling')
 
     start = idle.to(reaching_base_temp)
     reached_base_temp = reaching_base_temp.to(reaching_heat_temp)
-    reached_heat_temp = reaching_heat_temp.to(reaching_peak_temp)
+    reached_heat_temp = reaching_heat_temp.to(doing_heat_plateau)
+    heat_plateau_done = doing_heat_plateau.to(reaching_peak_temp)
     reached_peak_temp = reaching_peak_temp.to(doing_peak)
     peak_done = doing_peak.to(cooling)
     cooling_done = cooling.to(idle)
@@ -86,6 +88,9 @@ class OvenMachine(StateMachine):
 
     def on_reached_heat_temp(self):
         print("reached heat temp!")
+
+    def on_heat_plateau_done(self):
+        print("plateau completed")
 
     def on_reached_peak_temp(self):
         print("reached peak temp!")
@@ -137,6 +142,13 @@ class OvenController:
             if current_temp >= self.profile.conf["heat_temp"]:
                 self.time_stamp = datetime.now()
                 self.oven.reached_heat_temp()
+
+        elif self.oven.doing_heat_plateau:
+            target_temp = self.profile.conf["heat_temp"]
+
+            if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["plateau_time"]:
+                self.time_stamp = datetime.now()
+                self.oven.heat_plateau_done()
 
         elif self.oven.is_reaching_peak_temp:
             commanded_temp = (datetime.now() - self.time_stamp).total_seconds() * self.profile.conf["peak_ramp"] + self.profile.conf["heat_temp"]
@@ -374,6 +386,7 @@ class Profile():
             "base_temp": 80,
             "heat_temp": 180,
             "heat_ramp": 0.8,  # C/s
+            "plateau_time": 40,
             "time_above_melting_point": 90,  # s
             "melting_point": 217,
             "peak_temp": 260,
