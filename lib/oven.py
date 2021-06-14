@@ -400,7 +400,7 @@ class Profile():
             "cool_temp": 50,
             "cool_ramp": -2  # C/s
         }
-        self.conf = 
+        #self.conf = 
 
 
 class Report():
