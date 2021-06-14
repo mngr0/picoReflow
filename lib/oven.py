@@ -368,16 +368,17 @@ class Profile():
         obj = json.loads(json_data)
         self.conf={}
         self.name = obj["name"]
+        self.conf1 = {}
         for key in obj.keys():
             print("found ",key," : ",obj[key])
-            self.conf[key]=obj[key]
-        self.conf1 = {
+            self.conf1[key]=obj[key]
+        self.conf = {
             "base_temp": 80,
             "heat_temp": 180,
-            "heat_ramp": 1.5,  # C/s
+            "heat_ramp": 0.5,  # C/s
             "time_above_melting_point": 90,  # s
             "melting_point": 217,
-            "peak_temp": 230,
+            "peak_temp": 250,
             "limit_temp": 260,
             "peak_ramp": 2,  # C/s
             "peak_time": 30,  # s
@@ -399,6 +400,7 @@ class Profile():
             "cool_temp": 50,
             "cool_ramp": -2  # C/s
         }
+        self.conf = 
 
 
 class Report():

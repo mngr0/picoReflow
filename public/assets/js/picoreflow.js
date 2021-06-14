@@ -101,8 +101,8 @@ function updateProfileTable()
     var slope = "";
     var color = "";
 
-    var html = '<h3>Profile Points</h3><div class="table-responsive" style="scroll: none"> <table class="table table-striped">';
-        html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><<th></th></tr>';
+    var html = '<h3>Profile Points</h3> <div class="table-responsive" style="scroll: none"> <table class="table table-striped">';
+        html += '<tr><th> Action</th> <th> Target Temperature </th><th> Rate </th><th></th></tr>';
        
         var i=0
         for(var k in graph.profile){
