@@ -121,7 +121,7 @@ function updateProfileTable()
        
         var i=0
         for(var k in graph.profile.conf){
-            console.log("editing "+k)
+            //console.log("editing "+k)
             if(k != "type"){
                 html += '<tr><td><h4>' + k + '</h4></td>';
                 html += '<td> <td></td><input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile.conf[k] + '" style="width: 60px"/></td>';
@@ -297,6 +297,17 @@ function toggleTable()
 function saveProfile()
 {
     var name = $('#form_profile_name').val();
+
+    $('#profile_table tr').each(function(){
+        var currentRow=$(this);
+    
+        var col1_value=currentRow.find("td:eq(0)").text();
+        var col2_value=currentRow.find("td:eq(1)").text();
+        console.log ( col1_value + "    "+ col2_value)
+        
+    });
+
+
     var rawdata = graph.plot.getData()[0].data
 
     var profile = { "type": "profile", "data": data, "name": name }
