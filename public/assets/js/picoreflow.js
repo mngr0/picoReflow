@@ -124,7 +124,7 @@ function updateProfileTable()
             console.log("editing "+k)
             if(k != "type"){
                 html += '<tr><td><h4>' + k + '</h4></td>';
-                html += '<td> <input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile[k] + '" style="width: 60px"/></td>';
+                html += '<td> <input type="text" class="form-control" id="profiletable-0-'+i+'" value="'+ graph.profile.conf[k] + '" style="width: 60px"/></td>';
                // html += '<td><input type="text" class="form-control" id="profiletable-1-'+i+'" value="'+ graph.profile.data[i][1] + '" style="width: 60px" /></td>';
                 html += '</tr>';
             }
