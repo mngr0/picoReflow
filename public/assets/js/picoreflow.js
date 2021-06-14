@@ -26,8 +26,8 @@ if(window.webkitRequestAnimationFrame) window.requestAnimationFrame = window.web
 graph.profile =
 {
     label: "Profile",
-    target_temps = [],
-    conf= {
+    target_temps : [],
+    conf: {
         "base_temp": 80,
         "heat_temp": 180,
         "heat_ramp": 0.8,
