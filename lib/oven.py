@@ -143,7 +143,7 @@ class OvenController:
                 self.time_stamp = datetime.now()
                 self.oven.reached_heat_temp()
 
-        elif self.oven.doing_heat_plateau:
+        elif self.oven.is_doing_heat_plateau:
             target_temp = self.profile.conf["heat_temp"]
 
             if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["plateau_time"]:

@@ -307,9 +307,6 @@ function saveProfile()
         
     });
 
-
-    var rawdata = graph.plot.getData()[0].data
-
     var profile = { "type": "profile", "data": data, "name": name }
     
     for(var k in rawdata) profile[k]=rawdata[k];
