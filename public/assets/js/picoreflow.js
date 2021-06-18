@@ -110,6 +110,9 @@ function updateProgress(percentage)
     }
 }
 
+
+function updateTargetGraph(){}
+
 function updateProfileTable()
 {
     var dps = 0;
@@ -168,7 +171,7 @@ function updateProfileTable()
             
             //graph.plot = $.plot("#graph_container", [ graph.profile, graph.live ], getOptions());
             //}
-            updateProfileTable();
+            updateTargetGraph();
 
         });
 }
