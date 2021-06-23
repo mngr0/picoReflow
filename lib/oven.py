@@ -136,8 +136,8 @@ class OvenController:
         elif self.oven.is_reaching_heat_temp:
             commanded_temp = (datetime.now() -
                               self.time_stamp).total_seconds() * self.profile.conf["heat_ramp"] + self.profile.conf["base_temp"]
-            commanded_temp = max(commanded_temp , self.profile.conf["heat_temp"]+5)
             target_temp = max(current_temp, commanded_temp)
+            target_temp = max(target_temp , self.profile.conf["heat_temp"]+2)
             target_temp = min(target_temp, commanded_temp+10)
             if current_temp >= self.profile.conf["heat_temp"]:
                 self.time_stamp = datetime.now()
