@@ -77,7 +77,7 @@ class OvenMachine(StateMachine):
     cooling_done = cooling.to(idle)
 
     reset = idle.to.itself() | reaching_base_temp.to(idle) | reaching_heat_temp.to(
-        idle) | reaching_peak_temp.to(idle) | doing_peak.to(idle) | cooling.to(idle)
+        idle) | reaching_peak_temp.to(idle) | doing_heat_plateau.to(idle)  | doing_peak.to(idle) | cooling.to(idle)
 
     def on_start(self):
         print("start!!")
