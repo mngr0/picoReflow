@@ -145,7 +145,7 @@ class OvenController:
 
         elif self.oven.is_doing_heat_plateau:
             target_temp = self.profile.conf["heat_temp"]
-
+            air = False
             if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["plateau_time"]:
                 self.time_stamp = datetime.now()
                 self.oven.heat_plateau_done()
@@ -160,7 +160,6 @@ class OvenController:
 
         elif self.oven.is_doing_peak:
             target_temp = self.profile.conf["peak_temp"]
-
             if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["peak_time"]- 10:
                 air = True
             if (datetime.now() - self.time_stamp).total_seconds() > self.profile.conf["peak_time"]:
@@ -384,14 +383,14 @@ class Profile():
             self.conf1[key]=obj[key]
         self.conf = {
             "base_temp": 80,
-            "heat_temp": 180,
+            "heat_temp": 200,
             "heat_ramp": 0.8,  # C/s
             "plateau_time": 40,
             "time_above_melting_point": 90,  # s
             "melting_point": 217,
-            "peak_temp": 260,
+            "peak_temp": 220,
             "limit_temp": 265,
-            "peak_ramp": 1.3,  # C/s
+            "peak_ramp": 0.5,  # C/s
             "peak_time": 30,  # s
             "cool_temp": 100,
             "cool_ramp": -4,  # C/s
